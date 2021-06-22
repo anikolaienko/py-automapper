@@ -5,14 +5,18 @@ TODO:
 * setup mypy, black, flake8
 * use pipenv for dependencies or requirements.txt?
 * use setup.py for package generation?
+* use custom exception type
 
 Requirements:
 ```python
-from automapper import mapper
+from pyautomapper import mapper
 
 mapper.register(ParentClassA, fields_name_extractor_function)
 
 mapper.add(ClassA, ClassB)
+
+# Advanced feature: multiple from classes
+mapper.add(FromClassA, FromClassB, ToClassC)
 
 # add custom mappings for fields
 mapper.add(ClassA, ClassB, {"ClassA.field1", "ClassB.field2", "ClassA.field2", "ClassB.field1"})
