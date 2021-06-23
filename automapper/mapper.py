@@ -1,4 +1,4 @@
-from typing import Type, TypeVar, Dict, List, Tuple, Callable, Iterable
+from typing import Type, TypeVar, Dict, List, Tuple, Callable, Iterable, Optional
 import dataclasses
 
 from .exceptions import DuplicatedRegistration, MappingError
@@ -26,31 +26,44 @@ def register_fn_extractor(verifier: ExtractorVerifier, field_extractor: FieldExt
     __FIELD_EXTRACTORS_WITH_VERIFIER__[verifier] = field_extractor
 
 
-def __dataclass_verifier__(concrete_class: Type) -> bool:
-    return dataclasses.is_dataclass(concrete_class)
+# Predefined field extractors and class verifiers
+## For dataclass
+def __dataclass_verifier__(target_cls: Type) -> bool:
+    return dataclasses.is_dataclass(target_cls)
 
 
-def __dataclass_field_extractor__(concrete_class: Type) -> Iterable[str]:
-    return (x.name for x in dataclasses.fields(concrete_class))
+def __dataclass_field_extractor__(target_cls: Type) -> Iterable[str]:
+    return (x.name for x in dataclasses.fields(target_cls))
+
+## For any class with `__init__(self, ...)` constructor
+def __init_method_verifier__(target_cls) -> bool:
+    return hasattr(target_cls, "__init__")                  \
+        and hasattr(target_cls.__init__, "__annotations__") \
+        and isinstance(target_cls.__init__.__annotations__, dict)
 
 
+def __init_method_fields_extractor__(target_cls: Type) -> Iterable[str]:
+    return (field for field in target_cls.__init__.__annotations__.keys() if field != 'return')
+
+## Registering default extractors
 register_fn_extractor(__dataclass_verifier__, __dataclass_field_extractor__)
+register_fn_extractor(__init_method_verifier__, __init_method_fields_extractor__)
 
 
-def add(from_class: Type, to_class: Type):  # TODO: add custom mappings for fields
-    if from_class in __MAPPINGS__:
-        raise DuplicatedRegistration(f"from_class {from_class} is already registered for mapping")
-    __MAPPINGS__[from_class] = to_class
+def add(source_cls: Type, target_cls: Type):  # TODO: add custom mappings for fields
+    if source_cls in __MAPPINGS__:
+        raise DuplicatedRegistration(f"source_cls {source_cls} is already registered for mapping")
+    __MAPPINGS__[source_cls] = target_cls
 
 
-def __get_fields__(obj, object) -> Iterable[str]:
+def __get_fields__(target_cls: Type) -> Iterable[str]:
     for verifier in __FIELD_EXTRACTORS_WITH_VERIFIER__:
-        if verifier(obj):
-            return __FIELD_EXTRACTORS_WITH_VERIFIER__[verifier](obj)
+        if verifier(target_cls):
+            return __FIELD_EXTRACTORS_WITH_VERIFIER__[verifier](target_cls)
     for base_class in __FIELD_EXTRACTORS__:
-        if isinstance(obj, base_class):
-            return __FIELD_EXTRACTORS__[base_class](obj)
-    raise MappingError(f"No fields extractor registered for base class of {type(obj)}")
+        if issubclass(target_cls, base_class):
+            return __FIELD_EXTRACTORS__[base_class](target_cls)
+    raise MappingError(f"No fields extractor registered for base class of {type(target_cls)}")
 
 
 def map(obj: object) -> object:
@@ -59,7 +72,7 @@ def map(obj: object) -> object:
         raise MappingError(f"Missing mapping type for input type {obj_type}")
     
     mapping_type = __MAPPINGS__[obj_type]
-    to_fields = __get_fields__(obj)
+    to_fields = __get_fields__(mapping_type)
 
     mapped_values = {}
     for field_name in to_fields:
@@ -69,5 +82,5 @@ def map(obj: object) -> object:
     return mapping_type(**mapped_values)
 
 
-# def to()
-
+def to(target_cls: Type):
+    raise NotImplementedError()
