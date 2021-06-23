@@ -1,15 +1,15 @@
-from typing import Type, TypeVar, Dict, List, Callable, Iterable
+from typing import Type, TypeVar, Dict, List, Tuple, Callable, Iterable
 import dataclasses
 
-"""Types"""
+## Custom Types
 BaseType = TypeVar("BaseType", Type, object)
-FieldExtractor = Callable[Type, Iterable[str]]
-ExtractorVerifier = Callable[Type, bool]
+FieldExtractor = Callable[[Type], Iterable[str]]
+ExtractorVerifier = Callable[[Type], bool]
 
-"""Dictionary of mappings"""
-__MAPPINGS__: Dict[type, type] = {}
-__FIELD_EXTRACTORS__: Dict[Type, FieldExtractor]
-__FIELD_EXTRACTORS_WITH_VERIFIER__: Dict[ExtractorVerifier, FieldExtractor]
+## Internal containers
+__MAPPINGS__: Dict[Type, Type] = {}
+__FIELD_EXTRACTORS__: Dict[Type, FieldExtractor] = {}
+__FIELD_EXTRACTORS_WITH_VERIFIER__: Dict[ExtractorVerifier, FieldExtractor] = {}
 
 
 def register_extractor(base_class: Type, field_extractor: FieldExtractor) -> None:
@@ -17,11 +17,11 @@ def register_extractor(base_class: Type, field_extractor: FieldExtractor) -> Non
         raise ValueError(f"Field extractor for base class: {base_class} is already registered")
     __FIELD_EXTRACTORS__[base_class] = field_extractor
 
-
-def register_extractor(verifier: ExtractorVerifier, field_extractor: FieldExtractor) -> None:
-    if verifier in __FIELD_EXTRACTORS_WITH_VERIFIER__:
-        raise ValueError(f"Field extractor for verifier {verifier} is already registered")
-    __FIELD_EXTRACTORS_WITH_VERIFIER__[verifier] = field_extractor
+# TODO: add extension
+# def register_extractor(verifier: ExtractorVerifier, field_extractor: FieldExtractor) -> None:
+#     if verifier in __FIELD_EXTRACTORS_WITH_VERIFIER__:
+#         raise ValueError(f"Field extractor for verifier {verifier} is already registered")
+#     __FIELD_EXTRACTORS_WITH_VERIFIER__[verifier] = field_extractor
 
 
 def __dataclass_verifier__(concrete_class: Type) -> bool:
