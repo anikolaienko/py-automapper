@@ -14,16 +14,16 @@ __FIELD_EXTRACTORS__: Dict[Type, FieldExtractor] = {}
 __FIELD_EXTRACTORS_WITH_VERIFIER__: Dict[ExtractorVerifier, FieldExtractor] = {}
 
 
-def register_extractor(base_class: Type, field_extractor: FieldExtractor) -> None:
+def register_cls_extractor(base_class: Type, field_extractor: FieldExtractor) -> None:
     if base_class in __FIELD_EXTRACTORS__:
         raise DuplicatedRegistration(f"Field extractor for base class: {base_class} is already registered")
     __FIELD_EXTRACTORS__[base_class] = field_extractor
 
-# TODO: add extension
-# def register_extractor(verifier: ExtractorVerifier, field_extractor: FieldExtractor) -> None:
-#     if verifier in __FIELD_EXTRACTORS_WITH_VERIFIER__:
-#         raise DuplicatedRegistration(f"Field extractor for verifier {verifier} is already registered")
-#     __FIELD_EXTRACTORS_WITH_VERIFIER__[verifier] = field_extractor
+
+def register_fn_extractor(verifier: ExtractorVerifier, field_extractor: FieldExtractor) -> None:
+    if verifier in __FIELD_EXTRACTORS_WITH_VERIFIER__:
+        raise DuplicatedRegistration(f"Field extractor for verifier {verifier} is already registered")
+    __FIELD_EXTRACTORS_WITH_VERIFIER__[verifier] = field_extractor
 
 
 def __dataclass_verifier__(concrete_class: Type) -> bool:
@@ -34,7 +34,7 @@ def __dataclass_field_extractor__(concrete_class: Type) -> Iterable[str]:
     return (x.name for x in dataclasses.fields(concrete_class))
 
 
-register_extractor(__dataclass_verifier__, __dataclass_field_extractor__)
+register_fn_extractor(__dataclass_verifier__, __dataclass_field_extractor__)
 
 
 def add(from_class: Type, to_class: Type):  # TODO: add custom mappings for fields
