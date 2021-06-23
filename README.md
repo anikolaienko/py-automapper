@@ -6,6 +6,7 @@ TODO:
 * use pipenv for dependencies or requirements.txt?
 * use setup.py for package generation?
 * use custom exception type
+* use pytest for unit testing
 
 Requirements:
 ```python
