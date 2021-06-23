@@ -1,7 +1,10 @@
 from typing import Type, Iterable
 from unittest import TestCase
 
-import automapper.mapper as mapper
+import pytest
+
+import automapper as mapper
+import automapper.mapper as mapper_internal
 
 
 ## Test data
@@ -28,7 +31,12 @@ class AutomapperTest(TestCase):
     def test_register_extractor__adds_to_internal_collection(self):
         try:
             mapper.register_extractor(ParentClass, custom_fields_extractor)
-            assert ParentClass in mapper.__FIELD_EXTRACTORS__
-            assert ["num", "text", "flag"] == mapper.__FIELD_EXTRACTORS__[ParentClass](ChildClass)
+            assert ParentClass in mapper_internal.__FIELD_EXTRACTORS__
+            assert ["num", "text", "flag"] == mapper_internal.__FIELD_EXTRACTORS__[ParentClass](ChildClass)
         finally:
-            mapper.__FIELD_EXTRACTORS__.clear()
+            mapper_internal.__FIELD_EXTRACTORS__.clear()
+
+    def test_register_extractor__error_on_registering_same_class(self):
+        mapper.register_extractor(ParentClass, custom_fields_extractor)
+        with pytest.raises(mapper.DuplicatedRegistration):
+            mapper.register_extractor(ParentClass, lambda concrete_type: ["field1", "field2"])
