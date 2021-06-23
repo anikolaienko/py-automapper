@@ -2,11 +2,11 @@
 Python object auto mapper
 
 TODO:
-* setup mypy, black, flake8
-* use pipenv for dependencies or requirements.txt?
-* use setup.py for package generation?
 * use custom exception type
-* use pytest for unit testing
+* use https://docs.readthedocs.io/en/stable/index.html
+* configure poetry for building a package: https://python-poetry.org/docs/pyproject/
+* using TortoiseORM as an example of package building: https://github.com/tortoise/tortoise-orm/blob/develop
+
 
 Requirements:
 ```python
