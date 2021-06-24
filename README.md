@@ -2,54 +2,49 @@
 Python object auto mapper
 
 TODO:
-* use custom exception type
 * use https://docs.readthedocs.io/en/stable/index.html
 * configure poetry for building a package: https://python-poetry.org/docs/pyproject/
 * using TortoiseORM as an example of package building: https://github.com/tortoise/tortoise-orm/blob/develop
+* Make a mapper as a class, make a global mapper object, but also ability to create separate Mappers.
+Just like Logger.
 
 
 Requirements:
 ```python
-from pyautomapper import mapper
+from automapper import mapper
 
-mapper.register(ParentClassA, fields_name_extractor_function)
+mapper.register_cls_extractor(ParentClassA, fields_name_extractor_function)
 
-mapper.add(ClassA, ClassB)
-
-# Advanced feature: multiple from classes
-mapper.add(FromClassA, FromClassB, ToClassC)
-
-# add custom mappings for fields
-mapper.add(ClassA, ClassB, {"ClassA.field1", "ClassB.field2", "ClassA.field2", "ClassB.field1"})
+mapper.add(SourceClass, TargetClass)
 
 # output type is known from registered before
 mapper.map(obj)
 
 # output type specified
-mapper.map(obj, SpecificType)
+mapper.to(TargetClass).map(obj)
 
-# extra mappings, they override default mapping from `obj`
+# TODO: extra mappings, they override default mapping from `obj`
 mapper.map(obj, field1=value1, field2=value2)
 
-# same extra mappings with specific type, field1 and field2 comming from SpecificType
+# TODO: same extra mappings with specific type, field1 and field2 coming from SpecificType
 mapper.map(obj, SpecificType, field1=value1, field2=value2)
 
-# don't map None values, by default skip_none_values == False
+# Don't map None values, by default skip_none_values == False
 mapper.map(obj, skip_none_values = True)
 
-# Advance features
-# map multiple objects to output type
+# TODO: Mapping should be recursive
+# TODO: Add optional dependencies for 
+
+# TODO: Advanced: multiple from classes
+mapper.add(FromClassA, FromClassB, ToClassC)
+
+# TODO: Advanced: add custom mappings for fields
+mapper.add(ClassA, ClassB, {"ClassA.field1", "ClassB.field2", "ClassA.field2", "ClassB.field1"})
+
+# TODO: Advanced: map multiple objects to output type
 mapper.multimap(obj1, obj2)
-# or
-mapper.multimap(obj1, obj2, SpecificType)
+mapper.to(TargetType).multimap(obj1, obj2)
 
-# Verify correctness of all mappings?? That it's possible to construct object
-
-
-# Alternatives
-mapper.to(SpecificType).map(obj, field1=value1, field2=value2, skip_none_values=True)
-mapper.to(SpecifitType).map(obj1, obj2, field1=value1)
-# I like this more, cause it's more flexible regarding multimap option
-# and it may provide better type safety checks, specifically for extra fields, need to check.
+# TODO: Advanced: Verify correctness of all mappings and if it's possible to construct object
 
 ```

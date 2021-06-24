@@ -1,3 +1,7 @@
 {
-    "python.pythonPath": "/Users/andriinikolaienko/Documents/Projects/Python/py-automapper/.venv/bin/python3.8"
+    "python.pythonPath": ".venv/bin/python",
+    "cSpell.words": [
+        "multimap",
+        "pyautomapper"
+    ]
 }

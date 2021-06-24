@@ -3,6 +3,28 @@ name = "py-automapper"
 version = "0.0.1"
 description = "Library for automatically mapping one object to another"
 authors = ["Andrii Nikolaienko <anikolaienko14@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/anikolaienko/py-automapper"
+repository = "https://github.com/anikolaienko/py-automapper.git"
+keywords = ["utils", "dto", "object-mapper", "mapping", "development"]
+packages = [
+    { include = "automapper" }
+]
+include = ["CHANGELOG.md", "LICENSE", "README.md"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Build Tools",
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
