@@ -1,4 +1,4 @@
-class DuplicatedRegistration(ValueError):
+class DuplicatedRegistrationError(ValueError):
     pass
 
 
