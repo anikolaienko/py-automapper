@@ -8,8 +8,7 @@ T = TypeVar("T")
 # Predefined field extractors
 # For any class with `__init__(self, ...)` constructor
 def __init_method_verifier__(target_cls: Type[T]) -> bool:
-    """Default field verifier for classes with described fields in `__init__` method.
-    """
+    """Default field verifier for classes with described fields in `__init__` method."""
     return (
         hasattr(target_cls, "__init__")
         and hasattr(getattr(target_cls, "__init__"), "__annotations__")

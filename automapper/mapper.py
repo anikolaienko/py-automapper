@@ -21,17 +21,21 @@ class __MappingWrapper__(Generic[T]):
         self.__target_cls = target_cls
         self.__mapper = mapper
 
-    def map(self, obj: S, skip_none_values = False) -> T:
+    def map(self, obj: S, skip_none_values: bool = False) -> T:
         """Produces output object mapped from source object and custom arguments"""
-        return self.__mapper.__map_common__(obj, self.__target_cls, skip_none_values=skip_none_values)
+        return self.__mapper.__map_common__(
+            obj, self.__target_cls, skip_none_values=skip_none_values
+        )
 
 
 class Mapper:
-    def __init__(self):
+    def __init__(self) -> None:
         # Internal containers
-        self.__MAPPINGS__: Dict[Type[S], Type[T]] = {}                    # type: ignore [valid-type]
-        self.__FIELD_EXTRACTORS__: Dict[Type[T], FieldExtractor[T]] = {}  # type: ignore [valid-type]
-        self.__FIELD_EXTRACTORS_WITH_VERIFIER__: Dict[                    # type: ignore [valid-type]
+        self.__MAPPINGS__: Dict[Type[S], Type[T]] = {}  # type: ignore [valid-type]
+        self.__FIELD_EXTRACTORS__: Dict[  # type: ignore [valid-type]
+            Type[T], FieldExtractor[T]
+        ] = {}
+        self.__FIELD_EXTRACTORS_WITH_VERIFIER__: Dict[  # type: ignore [valid-type]
             ExtractorVerifier[T], FieldExtractor[T]
         ] = {}
 
@@ -53,19 +57,25 @@ class Mapper:
             )
         self.__FIELD_EXTRACTORS_WITH_VERIFIER__[verifier] = field_extractor
 
-    def add(self, source_cls: Type[S], target_cls: Type[T]) -> None:  # TODO: add custom mappings for fields
+    def add(
+        self, source_cls: Type[S], target_cls: Type[T]
+    ) -> None:  # TODO: add custom mappings for fields
         """Adds mapping between object of source class to form an object of target class"""
         if source_cls in self.__MAPPINGS__:
-            raise DuplicatedRegistrationError(f"source_cls {source_cls} is already registered for mapping")
+            raise DuplicatedRegistrationError(
+                f"source_cls {source_cls} is already registered for mapping"
+            )
         self.__MAPPINGS__[source_cls] = target_cls
 
-    def map(self, obj: object, skip_none_values = False) -> object:
+    def map(self, obj: object, skip_none_values: bool = False) -> object:
         """Produces output object mapped from source object and custom arguments"""
         obj_type = type(obj)
         if obj_type not in self.__MAPPINGS__:
             raise MappingError(f"Missing mapping type for input type {obj_type}")
 
-        return self.__map_common__(obj, self.__MAPPINGS__[obj_type], skip_none_values=skip_none_values)
+        return self.__map_common__(
+            obj, self.__MAPPINGS__[obj_type], skip_none_values=skip_none_values
+        )
 
     def __get_fields__(self, target_cls: Type[T]) -> Iterable[str]:
         """TODO: add description"""
@@ -79,7 +89,7 @@ class Mapper:
 
         raise MappingError(f"No fields extractor registered for base class of {type(target_cls)}")
 
-    def __map_common__(self, obj: S, target_cls: Type[T], skip_none_values = False) -> T:
+    def __map_common__(self, obj: S, target_cls: Type[T], skip_none_values: bool = False) -> T:
         """TODO: add description"""
         target_cls_fields = self.__get_fields__(target_cls)
 
@@ -92,7 +102,7 @@ class Mapper:
                     mapped_values[field_name] = value
 
         return target_cls(**mapped_values)  # type: ignore [call-arg]
-        
+
     def to(self, target_cls: Type[T]) -> __MappingWrapper__[T]:
         """TODO: add description"""
         return __MappingWrapper__[T](self, target_cls)

@@ -11,7 +11,7 @@ from automapper import mapper as global_mapper, Mapper, MappingError
 class SourceClass:
     id: int
     name: str
-    
+
 
 class TargetModel(Model):
     id = fields.IntField(pk=True)
@@ -31,9 +31,9 @@ class TestsForTortoiseORM(TestCase):
         with pytest.raises(MappingError):
             self.mapper.to(TargetModel).map(obj)
 
-    def test_map__global_mapper_works_with_provided_extension(self):
+    def test_map__global_mapper_works_with_provided_tortoise_extension(self):
         obj = SourceClass(17, "Test obj name")
-        
+
         result = global_mapper.to(TargetModel).map(obj)
 
         assert result.id == 17
