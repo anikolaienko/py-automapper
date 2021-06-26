@@ -2,12 +2,7 @@
 Python object auto mapper
 
 TODO:
-* figure out how to make optional dependencies TortoiseORM and Pydantic and use them in unit tests
 * use https://docs.readthedocs.io/en/stable/index.html
-* configure poetry for building a package: https://python-poetry.org/docs/pyproject/
-* using TortoiseORM as an example of package building: https://github.com/tortoise/tortoise-orm/blob/develop
-* Make a mapper as a class, make a global mapper object, but also ability to create separate Mappers.
-Just like Logger.
 
 
 Requirements:
