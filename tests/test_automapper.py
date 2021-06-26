@@ -1,4 +1,4 @@
-from typing import Protocol, Type, TypeVar, Iterable, cast
+from typing import Protocol, Any, Type, TypeVar, Iterable, cast
 from unittest import TestCase
 
 import pytest
@@ -28,17 +28,46 @@ class ChildClass(ParentClass):
 
 
 class AnotherClass:
-    def __init__(self, text: str) -> None:
+    def __init__(self, text: str, num: int) -> None:
         self.text = text
+        self.num = num
 
     @classmethod
     def fields(cls) -> Iterable[str]:
-        return ["text"]
+        return ["text", "num"]
 
 
-class FieldsClassProtocol(Protocol):
+class MetaClass(type):
+    def __new__(mcs, name: str, bases: Any, attrs: dict):
+        """Removes __annotations__ method from concrete class"""
+        ...
+
+
+class ClassWithoutAnnotations(metaclass=MetaClass):
+    def __init__(self, **kwargs: Any) -> None:
+        self.text = kwargs["text"]
+        self.num = kwargs["num"]
+
+    @classmethod
+    def fields(cls) -> Iterable[str]:
+        return ["text", "num"]
+
+
+class ClassWithFieldsMethodProtocol(Protocol):
     def fields(self) -> Iterable[str]:
         ...
+
+
+class ComplexClass:
+    def __init__(self, obj: ParentClass, text: str) -> None:
+        self.obj = obj
+        self.text = text
+
+
+class AnotherComplexClass:
+    def __init__(self, text: str, obj: ChildClass) -> None:
+        self.text = text
+        self.obj = obj
 
 
 def custom_fields_extractor(concrete_class: Type[T]) -> Iterable[str]:
@@ -49,12 +78,12 @@ def custom_fields_extractor(concrete_class: Type[T]) -> Iterable[str]:
     return fields
 
 
-def fields_fn_verifier(concrete_class: Type[T]) -> bool:
-    return callable(getattr(concrete_class, "fields", None))
+def fields_fn_verifier(target_cls: Type[T]) -> bool:
+    return callable(getattr(target_cls, "fields", None))
 
 
-def fields_fn_extractor(concrete_class: Type[T]) -> Iterable[str]:
-    return cast(FieldsClassProtocol, concrete_class).fields()
+def fields_fn_extractor(target_cls: Type[T]) -> Iterable[str]:
+    return cast(ClassWithFieldsMethodProtocol, target_cls).fields()
 
 
 # Test class
@@ -88,7 +117,7 @@ class AutomapperTest(TestCase):
     def test_register_fn_extractor__adds_to_internal_collection(self):
         mapper.register_fn_extractor(fields_fn_verifier, fields_fn_extractor)
         assert fields_fn_verifier in mapper_internal.__FIELD_EXTRACTORS_WITH_VERIFIER__
-        assert ["text"] == mapper_internal.__FIELD_EXTRACTORS_WITH_VERIFIER__[fields_fn_verifier](
+        assert ["text", "num"] == mapper_internal.__FIELD_EXTRACTORS_WITH_VERIFIER__[fields_fn_verifier](
             AnotherClass
         )
 
@@ -103,7 +132,9 @@ class AutomapperTest(TestCase):
         pass
 
     def test__init_method_verifier__does_not_cover_special_cases(self):
-        pass
+        obj = ChildClass(15, "sample", True)
+        with pytest.raises(mapper.MappingError):
+            mapper.to(ClassWithoutAnnotations).map(obj)
 
     def test_add__appends_class_to_class_mapping(self):
         with pytest.raises(mapper.MappingError):
@@ -115,6 +146,7 @@ class AutomapperTest(TestCase):
 
         assert isinstance(result, AnotherClass)
         assert result.text == "test_message"
+        assert result.num == 10
 
     def test_add__error_on_adding_same_source_class(self):
         class TempAnotherClass:
