@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": ".venv/bin/python",
+    "python.pythonPath": ".venv/bin/python3.8",
     "cSpell.words": [
         "multimap",
         "pyautomapper"

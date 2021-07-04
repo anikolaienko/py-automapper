@@ -1,4 +1,5 @@
-from typing import Type, TypeVar, Dict, Callable, Iterable, Generic
+import inspect
+from typing import Any, Type, TypeVar, Dict, Callable, Iterable, Generic
 
 from .exceptions import DuplicatedRegistrationError, MappingError
 
@@ -7,6 +8,11 @@ S = TypeVar("S")
 T = TypeVar("T")
 FieldExtractor = Callable[[Type[T]], Iterable[str]]
 ExtractorVerifier = Callable[[Type[T]], bool]
+
+
+def __is_sequence(obj):
+    """Check if object is iteratable"""
+    return hasattr(obj, '__iter__') and not isinstance(obj, str)
 
 
 class __MappingWrapper__(Generic[T]):
@@ -21,16 +27,21 @@ class __MappingWrapper__(Generic[T]):
         self.__target_cls = target_cls
         self.__mapper = mapper
 
-    def map(self, obj: S, skip_none_values: bool = False) -> T:
-        """Produces output object mapped from source object and custom arguments"""
-        return self.__mapper.__map_common__(
+    def map(self, obj: S, skip_none_values: bool = False, **kwargs: Any) -> T:
+        """Produces output object mapped from source object and custom arguments
+        
+        Parameters:
+            skip_none_values - do not map fields that has None value
+            **kwargs - custom mappings and fields overrides
+        """
+        return self.__mapper.__map_common(
             obj, self.__target_cls, skip_none_values=skip_none_values
         )
 
 
 class Mapper:
     def __init__(self) -> None:
-        # Internal containers
+        """Initializes internal containes"""
         self.__MAPPINGS__: Dict[Type[S], Type[T]] = {}  # type: ignore [valid-type]
         self.__FIELD_EXTRACTORS__: Dict[  # type: ignore [valid-type]
             Type[T], FieldExtractor[T]
@@ -40,7 +51,7 @@ class Mapper:
         ] = {}
 
     def register_cls_extractor(self, base_cls: Type[T], field_extractor: FieldExtractor[T]) -> None:
-        """TODO: add description"""
+        """Register a function that produces list of fields for a class inherited from base class"""
         if base_cls in self.__FIELD_EXTRACTORS__:
             raise DuplicatedRegistrationError(
                 f"Field extractor for base class: {base_cls} is already registered"
@@ -50,7 +61,10 @@ class Mapper:
     def register_fn_extractor(
         self, verifier: ExtractorVerifier[T], field_extractor: FieldExtractor[T]
     ) -> None:
-        """TODO: add description"""
+        """Register two functions:
+            verifier - a function that can identify specifit type of objects
+            field_extractor - a function that can produces list of fields for identified type of object
+        """
         if verifier in self.__FIELD_EXTRACTORS_WITH_VERIFIER__:
             raise DuplicatedRegistrationError(
                 f"Field extractor for verifier {verifier} is already registered"
@@ -59,7 +73,7 @@ class Mapper:
 
     def add(
         self, source_cls: Type[S], target_cls: Type[T]
-    ) -> None:  # TODO: add custom mappings for fields
+    ) -> None:
         """Adds mapping between object of source class to form an object of target class"""
         if source_cls in self.__MAPPINGS__:
             raise DuplicatedRegistrationError(
@@ -73,12 +87,12 @@ class Mapper:
         if obj_type not in self.__MAPPINGS__:
             raise MappingError(f"Missing mapping type for input type {obj_type}")
 
-        return self.__map_common__(
+        return self.__map_common(
             obj, self.__MAPPINGS__[obj_type], skip_none_values=skip_none_values
         )
 
-    def __get_fields__(self, target_cls: Type[T]) -> Iterable[str]:
-        """TODO: add description"""
+    def __get_fields(self, target_cls: Type[T]) -> Iterable[str]:
+        """Retrieved list of fields for initializing target class object"""
         for base_class in self.__FIELD_EXTRACTORS__:
             if issubclass(target_cls, base_class):
                 return self.__FIELD_EXTRACTORS__[base_class](target_cls)
@@ -89,24 +103,41 @@ class Mapper:
 
         raise MappingError(f"No fields extractor registered for base class of {type(target_cls)}")
 
-    def __map_common__(self, obj: S, target_cls: Type[T], skip_none_values: bool = False) -> T:
-        """TODO: add description"""
-        target_cls_fields = self.__get_fields__(target_cls)
+    def __map_common(self, obj: S, target_cls: Type[T], skip_none_values: bool = False, **kwargs: Any) -> T:
+        """Produces output object mapped from source object and custom arguments
+        
+        Parameters:
+            skip_none_values - do not map fields that has None value
+            **kwargs - custom mappings and fields overrides
+        """
+        target_cls_fields = self.__get_fields(target_cls)
 
         mapped_values = {}
         for field_name in target_cls_fields:
-            if hasattr(obj, field_name):
-                value = getattr(obj, field_name)
+            if field_name in kwargs or hasattr(obj, field_name):
+                value = kwargs[field_name] if field_name in kwargs else getattr(obj, field_name)
 
-                if not skip_none_values or value is not None:
+                if value is not None:
+                    if __is_sequence(value):
+                        if isinstance(value, dict):
+                            ...
+                        else:
+                            container = list()
+
+                            type(value)(container)
+                        ... # TODO: implement, copy sequence with mapped objects
+                    # elif inspect.isclass(value):
+                        ... # TODO: implement, somehow check that object of custom class value and not primitive
+                    else:
+                        mapped_values[field_name] = value
+                elif not skip_none_values:
                     mapped_values[field_name] = value
 
         return target_cls(**mapped_values)  # type: ignore [call-arg]
 
     def to(self, target_cls: Type[T]) -> __MappingWrapper__[T]:
-        """TODO: add description"""
+        """Specify target class to map source object to"""
         return __MappingWrapper__[T](self, target_cls)
-
 
 # Global mapper
 mapper = Mapper()

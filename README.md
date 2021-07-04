@@ -1,10 +1,6 @@
 # py-automapper
 Python object auto mapper
 
-TODO:
-* use https://docs.readthedocs.io/en/stable/index.html
-
-
 Requirements:
 ```python
 from automapper import mapper
@@ -19,17 +15,13 @@ mapper.map(obj)
 # output type specified
 mapper.to(TargetClass).map(obj)
 
-# TODO: extra mappings, they override default mapping from `obj`
+# Extra mappings, they override default mapping from `obj`
 mapper.map(obj, field1=value1, field2=value2)
-
-# TODO: same extra mappings with specific type, field1 and field2 coming from SpecificType
-mapper.map(obj, SpecificType, field1=value1, field2=value2)
 
 # Don't map None values, by default skip_none_values == False
 mapper.map(obj, skip_none_values = True)
 
 # TODO: Mapping should be recursive
-# TODO: Add optional dependencies for 
 
 # TODO: Advanced: multiple from classes
 mapper.add(FromClassA, FromClassB, ToClassC)
