@@ -4,3 +4,7 @@ class DuplicatedRegistrationError(ValueError):
 
 class MappingError(Exception):
     pass
+
+
+class  CircularReferenceError(Exception):
+    pass

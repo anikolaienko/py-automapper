@@ -1,7 +1,7 @@
-import inspect
 from typing import Any, Type, TypeVar, Dict, Callable, Iterable, Generic
+from copy import deepcopy
 
-from .exceptions import DuplicatedRegistrationError, MappingError
+from .exceptions import CircularReferenceError, DuplicatedRegistrationError, MappingError
 
 # Custom Types
 S = TypeVar("S")
@@ -9,10 +9,17 @@ T = TypeVar("T")
 FieldExtractor = Callable[[Type[T]], Iterable[str]]
 ExtractorVerifier = Callable[[Type[T]], bool]
 
+__PRIMITIVE_TYPES = {int, float, complex, str, bytes, bytearray, bool}
 
-def __is_sequence(obj):
+
+def __is_sequence(obj: Any) -> bool:
     """Check if object is iteratable"""
-    return hasattr(obj, '__iter__') and not isinstance(obj, str)
+    return hasattr(obj, '__iter__') 
+
+
+def __is_primitive(obj: Any) -> bool:
+    """Check if object type is primitive"""
+    return type(obj) in __PRIMITIVE_TYPES
 
 
 class __MappingWrapper__(Generic[T]):
@@ -41,7 +48,7 @@ class __MappingWrapper__(Generic[T]):
 
 class Mapper:
     def __init__(self) -> None:
-        """Initializes internal containes"""
+        """Initializes internal containers"""
         self.__MAPPINGS__: Dict[Type[S], Type[T]] = {}  # type: ignore [valid-type]
         self.__FIELD_EXTRACTORS__: Dict[  # type: ignore [valid-type]
             Type[T], FieldExtractor[T]
@@ -62,7 +69,7 @@ class Mapper:
         self, verifier: ExtractorVerifier[T], field_extractor: FieldExtractor[T]
     ) -> None:
         """Register two functions:
-            verifier - a function that can identify specifit type of objects
+            verifier - a function that can identify specific type of objects
             field_extractor - a function that can produces list of fields for identified type of object
         """
         if verifier in self.__FIELD_EXTRACTORS_WITH_VERIFIER__:
@@ -103,16 +110,49 @@ class Mapper:
 
         raise MappingError(f"No fields extractor registered for base class of {type(target_cls)}")
 
-    def __map_item(self, obj: S) -> T:
-        ...
+    def __map_subobject(self, obj: S, _visited_objects: set, skip_none_values: bool = False) -> T:
+        """
+        """
+        if __is_primitive(obj):
+            return obj
 
-    def __map_common(self, obj: S, target_cls: Type[T], skip_none_values: bool = False, **kwargs: Any) -> T:
+        if id(obj) in _visited_objects:
+            raise CircularReferenceError("Mapper does not support objects with circular references")
+        _visited_objects.add(id(obj))
+
+        if __is_sequence(obj):
+            if isinstance(obj, dict):
+                return {
+                    k: self.__map_subobject(v, skip_none_values=skip_none_values)
+                    for k, v in obj
+                }
+            else:
+                return type(obj)([
+                    self.__map_subobject(x, skip_none_values=skip_none_values)
+                    for x in obj
+                ])
+
+        if type(obj) in self.__MAPPINGS__:
+            return self.__map_common(
+                obj,
+                self.__MAPPINGS__[type(obj)],
+                skip_none_values=skip_none_values
+            )
+
+        return deepcopy(obj)
+
+
+    def __map_common(self, obj: S, target_cls: Type[T], _visited_objects: set, skip_none_values: bool = False, **kwargs: Any) -> T:
         """Produces output object mapped from source object and custom arguments
         
         Parameters:
             skip_none_values - do not map fields that has None value
             **kwargs - custom mappings and fields overrides
         """
+        if id(obj) in _visited_objects:
+            raise CircularReferenceError("Mapper does not support objects with circular references")
+        _visited_objects.add(id(obj))
+
         target_cls_fields = self.__get_fields(target_cls)
 
         mapped_values = {}
@@ -121,26 +161,16 @@ class Mapper:
                 value = kwargs[field_name] if field_name in kwargs else getattr(obj, field_name)
 
                 if value is not None:
-                    if __is_sequence(value):
-                        if isinstance(value, dict):
-                            {k: self.__map_item(v) for k, v in value}
-                        else:
-                            container = [self.__map_item(x) for x in value]
-                            value = type(value)(container)
-                    elif not __is_primitive(value):
-                        # check if mapping exists
-                        # otherwise call deepcopy
-                        ... # TODO: implement, somehow check that object of custom class value and not primitive
-                    
-                    mapped_values[field_name] = value
+                    mapped_values[field_name] = self.__map_subobject(value, _visited_objects, skip_none_values)
                 elif not skip_none_values:
-                    mapped_values[field_name] = value
+                    mapped_values[field_name] = None
 
         return target_cls(**mapped_values)  # type: ignore [call-arg]
 
     def to(self, target_cls: Type[T]) -> __MappingWrapper__[T]:
         """Specify target class to map source object to"""
         return __MappingWrapper__[T](self, target_cls)
+
 
 # Global mapper
 mapper = Mapper()
