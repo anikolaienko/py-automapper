@@ -103,6 +103,9 @@ class Mapper:
 
         raise MappingError(f"No fields extractor registered for base class of {type(target_cls)}")
 
+    def __map_item(self, obj: S) -> T:
+        ...
+
     def __map_common(self, obj: S, target_cls: Type[T], skip_none_values: bool = False, **kwargs: Any) -> T:
         """Produces output object mapped from source object and custom arguments
         
@@ -120,16 +123,16 @@ class Mapper:
                 if value is not None:
                     if __is_sequence(value):
                         if isinstance(value, dict):
-                            ...
+                            {k: self.__map_item(v) for k, v in value}
                         else:
-                            container = list()
-
-                            type(value)(container)
-                        ... # TODO: implement, copy sequence with mapped objects
-                    # elif inspect.isclass(value):
+                            container = [self.__map_item(x) for x in value]
+                            value = type(value)(container)
+                    elif not __is_primitive(value):
+                        # check if mapping exists
+                        # otherwise call deepcopy
                         ... # TODO: implement, somehow check that object of custom class value and not primitive
-                    else:
-                        mapped_values[field_name] = value
+                    
+                    mapped_values[field_name] = value
                 elif not skip_none_values:
                     mapped_values[field_name] = value
 
