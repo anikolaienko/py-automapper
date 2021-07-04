@@ -42,7 +42,7 @@ class __MappingWrapper__(Generic[T]):
             **kwargs - custom mappings and fields overrides
         """
         return self.__mapper.__map_common(
-            obj, self.__target_cls, skip_none_values=skip_none_values
+            obj, self.__target_cls, set(), skip_none_values=skip_none_values
         )
 
 
@@ -95,7 +95,7 @@ class Mapper:
             raise MappingError(f"Missing mapping type for input type {obj_type}")
 
         return self.__map_common(
-            obj, self.__MAPPINGS__[obj_type], skip_none_values=skip_none_values
+            obj, self.__MAPPINGS__[obj_type], set(), skip_none_values=skip_none_values
         )
 
     def __get_fields(self, target_cls: Type[T]) -> Iterable[str]:
