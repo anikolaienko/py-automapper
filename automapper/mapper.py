@@ -1,4 +1,4 @@
-from typing import Any, Union, Type, TypeVar, Dict, Set, Callable, Iterable, Generic, overload
+from typing import Any, Union, Type, TypeVar, Dict, Set, Callable, Iterable, Generic, overload, cast
 from copy import deepcopy
 import inspect
 
@@ -57,11 +57,11 @@ class Mapper:
         ] = {}
 
     @overload
-    def add_spec(self, base_cls: Type[T], spec_func: SpecFunction[T]) -> None:
+    def add_spec(self, classifier: Type[T], spec_func: SpecFunction[T]) -> None:
         """Add a spec function for all classes in inherited from base class.
 
         Parameters:
-            * base_cls - base class to identify all descendant classes
+            * classifier - base class to identify all descendant classes
             * spec_func - returns a list of fields (List[str]) for target class
             that are accepted in constructor
         """
@@ -87,13 +87,13 @@ class Mapper:
                 raise DuplicatedRegistrationError(
                     f"Spec function for base class: {classifier} was already added"
                 )
-            self._class_specs[classifier] = spec_func
+            self._class_specs[cast(Type[T], classifier)] = spec_func
         elif callable(classifier):
             if classifier in self._classifier_specs:
                 raise DuplicatedRegistrationError(
                     f"Spec function for classifier {classifier} was already added"
                 )
-            self._classifier_specs[classifier] = spec_func
+            self._classifier_specs[cast(ClassifierFunction[T], classifier)] = spec_func
         else:
             raise ValueError("Incorrect type of the classifier argument")
 
@@ -127,28 +127,34 @@ class Mapper:
 
         raise MappingError(f"No spec function is added for base class of {type(target_cls)}")
 
-    def _map_subobject(self, obj: S, _visited_objects: set, skip_none_values: bool = False) -> Any:
-        """"""
+    def _map_subobject(
+        self, obj: S, _visited_objects: Set[int], skip_none_values: bool = False
+    ) -> Any:
+        """Maps subobjects recursively"""
         if is_primitive(obj):
             return obj
 
         if id(obj) in _visited_objects:
-            raise CircularReferenceError("Mapper does not support objects with circular references")
+            raise CircularReferenceError()
         _visited_objects.add(id(obj))
 
         if is_sequence(obj):
             if isinstance(obj, dict):
                 return {
-                    k: self._map_subobject(v, skip_none_values=skip_none_values) for k, v in obj
+                    k: self._map_subobject(v, _visited_objects, skip_none_values=skip_none_values)
+                    for k, v in obj
                 }
             else:
-                return type(obj)(
-                    [self._map_subobject(x, skip_none_values=skip_none_values) for x in obj]
+                return type(obj)(  # type: ignore [call-arg]
+                    [
+                        self._map_subobject(x, _visited_objects, skip_none_values=skip_none_values)
+                        for x in cast(Iterable[Any], obj)
+                    ]
                 )
 
         if type(obj) in self._mappings:
             return self._map_common(
-                obj, self._mappings[type(obj)], skip_none_values=skip_none_values
+                obj, self._mappings[type(obj)], _visited_objects, skip_none_values=skip_none_values
             )
 
         return deepcopy(obj)
@@ -168,7 +174,7 @@ class Mapper:
             **kwargs - custom mappings and fields overrides
         """
         if id(obj) in _visited_objects:
-            raise CircularReferenceError("Mapper does not support objects with circular references")
+            raise CircularReferenceError()
         _visited_objects.add(id(obj))
 
         target_cls_fields = self._get_fields(target_cls)
