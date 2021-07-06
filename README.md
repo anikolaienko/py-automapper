@@ -3,7 +3,7 @@ Python object auto mapper
 
 Current mapper can be useful for multilayer architecture which requires constant mapping between objects from separate layers (data layer, presentation layer, etc).
 
-For more information read the (documentation)[].
+For more information read the [documentation](https://anikolaienko.github.io/py-automapper).
 
 ## Usage example:
 ```python
