@@ -53,19 +53,19 @@ class AnotherComplexClass:
         self.obj = obj
 
 
-def custom_fields_extractor(concrete_class: Type[T]) -> Iterable[str]:
+def custom_spec_func(concrete_class: Type[T]) -> Iterable[str]:
     fields = []
-    for val_name, val_type in concrete_class.__init__.__annotations__.items():
+    for val_name in concrete_class.__init__.__annotations__:
         if val_name != "return":
             fields.append(val_name)
     return fields
 
 
-def fields_fn_verifier(target_cls: Type[T]) -> bool:
+def classifier_func(target_cls: Type[T]) -> bool:
     return callable(getattr(target_cls, "fields", None))
 
 
-def fields_fn_extractor(target_cls: Type[T]) -> Iterable[str]:
+def spec_func(target_cls: Type[T]) -> Iterable[str]:
     return cast(ClassWithFieldsMethodProtocol, target_cls).fields()
 
 
@@ -74,37 +74,31 @@ class AutomapperTest(TestCase):
     def setUp(self):
         self.mapper = Mapper()
 
-    def test_register_cls_extractor__adds_to_internal_collection(self):
-        self.mapper.register_cls_extractor(ParentClass, custom_fields_extractor)
-        assert ParentClass in self.mapper.__FIELD_EXTRACTORS__
-        assert ["num", "text", "flag"] == self.mapper.__FIELD_EXTRACTORS__[ParentClass](ChildClass)
+    def test_add_spec__adds_to_internal_collection(self):
+        self.mapper.add_spec(ParentClass, custom_spec_func)
+        assert ParentClass in self.mapper._class_specs
+        assert ["num", "text", "flag"] == self.mapper._class_specs[ParentClass](ChildClass)
 
-    def test_register_cls_extractor__error_on_registering_same_class(self):
-        self.mapper.register_cls_extractor(ParentClass, custom_fields_extractor)
+    def test_add_spec__error_on_adding_same_class_spec(self):
+        self.mapper.add_spec(ParentClass, custom_spec_func)
         with pytest.raises(DuplicatedRegistrationError):
-            self.mapper.register_cls_extractor(
-                ParentClass, lambda concrete_type: ["field1", "field2"]
-            )
+            self.mapper.add_spec(ParentClass, lambda concrete_type: ["field1", "field2"])
 
-    def test_register_fn_extractor__adds_to_internal_collection(self):
-        self.mapper.register_fn_extractor(fields_fn_verifier, fields_fn_extractor)
-        assert fields_fn_verifier in self.mapper.__FIELD_EXTRACTORS_WITH_VERIFIER__
-        assert ["text", "num"] == self.mapper.__FIELD_EXTRACTORS_WITH_VERIFIER__[
-            fields_fn_verifier
-        ](AnotherClass)
+    def test_add_spec__adds_to_internal_collection_for_classifier(self):
+        self.mapper.add_spec(classifier_func, spec_func)
+        assert classifier_func in self.mapper._classifier_specs
+        assert ["text", "num"] == self.mapper._classifier_specs[classifier_func](AnotherClass)
 
-    def test_register_fn_extractor__error_on_duplicated_registration(self):
-        self.mapper.register_fn_extractor(fields_fn_verifier, fields_fn_extractor)
+    def test_add_spec__error_on_duplicated_registration(self):
+        self.mapper.add_spec(classifier_func, spec_func)
         with pytest.raises(DuplicatedRegistrationError):
-            self.mapper.register_fn_extractor(
-                fields_fn_verifier, lambda concrete_type: ["field1", "field2"]
-            )
+            self.mapper.add_spec(classifier_func, lambda concrete_type: ["field1", "field2"])
 
     def test_add__appends_class_to_class_mapping(self):
         with pytest.raises(MappingError):
             self.mapper.map(ChildClass)
 
-        self.mapper.register_cls_extractor(AnotherClass, custom_fields_extractor)
+        self.mapper.add_spec(AnotherClass, custom_spec_func)
         self.mapper.add(ChildClass, AnotherClass)
         result = self.mapper.map(ChildClass(10, "test_message", True))
 

@@ -34,14 +34,14 @@ mapper = Mapper()
 
 # Add your own extension for extracting list of fields from class
 # for all classes inherited from base class
-mapper.register_cls_extractor(
+mapper.add_spec(
     BaseClass,
     lambda child_class: child_class.get_fields_function()
 )
 
 # Add your own extension for extracting list of fields from class
 # for all classes that can be identified in verification function
-mapper.register_fn_extractor(
+mapper.add_spec(
     lambda cls: hasattr(cls, "get_fields_function"),
     lambda cls: cls.get_fields_function()
 )

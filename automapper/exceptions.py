@@ -6,5 +6,5 @@ class MappingError(Exception):
     pass
 
 
-class  CircularReferenceError(Exception):
+class CircularReferenceError(Exception):
     pass
