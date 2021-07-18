@@ -18,7 +18,7 @@ class TargetModel(Model):
     name = fields.TextField()
 
 
-class TestsForTortoiseORM(TestCase):
+class TortoiseORMExtensionTest(TestCase):
     """These scenario are known for ORM systems.
     e.g. Model classes in Tortoise ORM
     """

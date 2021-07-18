@@ -1,12 +1,15 @@
-from typing import Protocol, Type, TypeVar, Iterable, cast
 from unittest import TestCase
+from typing import Protocol, Type, TypeVar, Iterable, cast
 
 import pytest
 
-from automapper import mapper as global_mapper, Mapper, MappingError, DuplicatedRegistrationError
+from automapper import (
+    create_mapper,
+    MappingError,
+    DuplicatedRegistrationError
+)
 
 
-# Test data
 T = TypeVar("T")
 
 
@@ -31,6 +34,11 @@ class AnotherClass:
         self.text = text
         self.num = num
 
+
+class ClassWithoutInitAttrDef:
+    def __init__(self, **kwargs) -> None:
+        self.data = kwargs.copy()
+
     @classmethod
     def fields(cls) -> Iterable[str]:
         return ["text", "num"]
@@ -39,18 +47,6 @@ class AnotherClass:
 class ClassWithFieldsMethodProtocol(Protocol):
     def fields(self) -> Iterable[str]:
         ...
-
-
-class ComplexClass:
-    def __init__(self, obj: ParentClass, text: str) -> None:
-        self.obj = obj
-        self.text = text
-
-
-class AnotherComplexClass:
-    def __init__(self, text: str, obj: ChildClass) -> None:
-        self.text = text
-        self.obj = obj
 
 
 def custom_spec_func(concrete_class: Type[T]) -> Iterable[str]:
@@ -69,10 +65,9 @@ def spec_func(target_cls: Type[T]) -> Iterable[str]:
     return cast(ClassWithFieldsMethodProtocol, target_cls).fields()
 
 
-# Test class
 class AutomapperTest(TestCase):
     def setUp(self):
-        self.mapper = Mapper()
+        self.mapper = create_mapper()
 
     def test_add_spec__adds_to_internal_collection(self):
         self.mapper.add_spec(ParentClass, custom_spec_func)
@@ -87,7 +82,7 @@ class AutomapperTest(TestCase):
     def test_add_spec__adds_to_internal_collection_for_classifier(self):
         self.mapper.add_spec(classifier_func, spec_func)
         assert classifier_func in self.mapper._classifier_specs
-        assert ["text", "num"] == self.mapper._classifier_specs[classifier_func](AnotherClass)
+        assert ["text", "num"] == self.mapper._classifier_specs[classifier_func](ClassWithoutInitAttrDef)
 
     def test_add_spec__error_on_duplicated_registration(self):
         self.mapper.add_spec(classifier_func, spec_func)
@@ -114,18 +109,29 @@ class AutomapperTest(TestCase):
         with pytest.raises(DuplicatedRegistrationError):
             self.mapper.add(ChildClass, TempAnotherClass)
 
-    def test_to__global_mapper_works_with_provided_init_extension(self):
+    def test_to__mapper_works_with_provided_init_extension(self):
         source_obj = ChildClass(10, "test_text", False)
 
-        result = global_mapper.to(AnotherClass).map(source_obj)
+        result = self.mapper.to(AnotherClass).map(source_obj)
 
         assert isinstance(result, AnotherClass)
         assert result.text == "test_text"
 
     def test_map__skip_none_values_from_source_object(self):
-        # TODO: implement
-        pass
+        self.mapper.add_spec(classifier_func, spec_func)
+        
+        obj = self.mapper.to(ClassWithoutInitAttrDef).map(AnotherClass(None, 11), skip_none_values=True)
+
+        assert "text" not in obj.data
+        assert "num" in obj.data
+        assert obj.data.get("num") == 11
 
     def test_map__pass_none_values_from_source_object(self):
-        # TODO: implement
-        pass
+        self.mapper.add_spec(classifier_func, spec_func)
+
+        obj = self.mapper.to(ClassWithoutInitAttrDef).map(AnotherClass(None, 11))
+        
+        assert "text" in obj.data
+        assert "num" in obj.data
+        assert obj.data.get("text") == None
+        assert obj.data.get("num") == 11

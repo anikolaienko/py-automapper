@@ -1,8 +1,9 @@
 # flake8: noqa: F401
-from .mapper import Mapper, mapper
+from .mapper import Mapper
 
 from .exceptions import DuplicatedRegistrationError, MappingError, CircularReferenceError
 
-from .extensions_loader import load_extensions
+from .mapper_initializer import create_mapper
 
-load_extensions(mapper)
+# Global mapper
+mapper = create_mapper()

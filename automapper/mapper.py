@@ -121,49 +121,55 @@ class Mapper:
             if issubclass(target_cls, base_class):
                 return self._class_specs[base_class](target_cls)
 
-        for classifier in self._classifier_specs:
+        for classifier in reversed(self._classifier_specs):
             if classifier(target_cls):
                 return self._classifier_specs[classifier](target_cls)
 
         raise MappingError(f"No spec function is added for base class of {type(target_cls)}")
 
     def _map_subobject(
-        self, obj: S, _visited_objects: Set[int], skip_none_values: bool = False
+        self, obj: S, _visited_stack: Set[int], skip_none_values: bool = False
     ) -> Any:
         """Maps subobjects recursively"""
         if is_primitive(obj):
             return obj
 
-        if id(obj) in _visited_objects:
+        obj_id = id(obj)
+        if obj_id in _visited_stack:
             raise CircularReferenceError()
-        _visited_objects.add(id(obj))
-
-        if is_sequence(obj):
-            if isinstance(obj, dict):
-                return {
-                    k: self._map_subobject(v, _visited_objects, skip_none_values=skip_none_values)
-                    for k, v in obj
-                }
-            else:
-                return type(obj)(  # type: ignore [call-arg]
-                    [
-                        self._map_subobject(x, _visited_objects, skip_none_values=skip_none_values)
-                        for x in cast(Iterable[Any], obj)
-                    ]
-                )
 
         if type(obj) in self._mappings:
-            return self._map_common(
-                obj, self._mappings[type(obj)], _visited_objects, skip_none_values=skip_none_values
+            result = self._map_common(
+                obj, self._mappings[type(obj)], _visited_stack, skip_none_values=skip_none_values
             )
+        else:
+            _visited_stack.add(obj_id)
 
-        return deepcopy(obj)
+            if is_sequence(obj):
+                if isinstance(obj, dict):
+                    result = {
+                        k: self._map_subobject(v, _visited_stack, skip_none_values=skip_none_values)
+                        for k, v in obj
+                    }
+                else:
+                    result = type(obj)(  # type: ignore [call-arg]
+                        [
+                            self._map_subobject(x, _visited_stack, skip_none_values=skip_none_values)
+                            for x in cast(Iterable[Any], obj)
+                        ]
+                    )
+            else:
+                result = deepcopy(obj)
+
+            _visited_stack.remove(obj_id)
+        
+        return result
 
     def _map_common(
         self,
         obj: S,
         target_cls: Type[T],
-        _visited_objects: Set[int],
+        _visited_stack: Set[int],
         skip_none_values: bool = False,
         **kwargs: Any,
     ) -> T:
@@ -173,9 +179,11 @@ class Mapper:
             skip_none_values - do not map fields that has None value
             **kwargs - custom mappings and fields overrides
         """
-        if id(obj) in _visited_objects:
+        obj_id = id(obj)
+
+        if obj_id in _visited_stack:
             raise CircularReferenceError()
-        _visited_objects.add(id(obj))
+        _visited_stack.add(obj_id)
 
         target_cls_fields = self._get_fields(target_cls)
 
@@ -186,17 +194,15 @@ class Mapper:
 
                 if value is not None:
                     mapped_values[field_name] = self._map_subobject(
-                        value, _visited_objects, skip_none_values
+                        value, _visited_stack, skip_none_values
                     )
                 elif not skip_none_values:
                     mapped_values[field_name] = None
+
+        _visited_stack.remove(obj_id)
 
         return target_cls(**mapped_values)  # type: ignore [call-arg]
 
     def to(self, target_cls: Type[T]) -> MappingWrapper[T]:
         """Specify target class to map source object to"""
         return MappingWrapper[T](self, target_cls)
-
-
-# Global mapper
-mapper = Mapper()

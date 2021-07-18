@@ -13,11 +13,10 @@ __PACKAGE_PATH__ = __package__ + "." + __EXTENSIONS_FOLDER__
 log = logging.getLogger("automapper")
 
 
-def load_extensions(mapper: Mapper) -> None:
-    """It is designed that name of extension file should be the same as the module
-    which extension is developed for.
-    In this way current method will find and load the extension
+def create_mapper() -> Mapper:
+    """Returns a Mapper instance with preloaded extensions
     """
+    mapper = Mapper()
     extensions = glob.glob(join(dirname(__file__), __EXTENSIONS_FOLDER__, "*.py"))
     for extension in extensions:
         if isfile(extension) and not extension.endswith("__init__.py"):
@@ -35,3 +34,4 @@ def load_extensions(mapper: Mapper) -> None:
                     log.exception(
                         f"Found module {module_name} but could not load extension for it."
                     )
+    return mapper
