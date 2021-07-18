@@ -1,5 +1,5 @@
 from unittest import TestCase
-from typing import Iterable, Protocol, Type, TypeVar, cast, runtime_checkable
+from typing import Iterable, Protocol, Type, TypeVar, Any, cast, runtime_checkable
 from collections import namedtuple
 
 from automapper import Mapper
@@ -10,7 +10,7 @@ T = TypeVar("T")
 
 
 class ClassWithoutInitAttrDef:
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self.data = kwargs.copy()
 
     @classmethod
@@ -43,7 +43,7 @@ class DefaultExtensionTest(TestCase):
 
     def test_custom_spec_for_class__works_for_kwargs_in_init(self):
         self.mapper.add_spec(ClassWithoutInitAttrDef, spec_func)
-        source = namedtuple("SourceObj", ["text", "num"])("text_msg", 11)
+        source = namedtuple("SourceObj", ["text", "num"])("text_msg", 11)  # type: ignore [call-arg]
 
         obj = self.mapper.to(ClassWithoutInitAttrDef).map(source)
 
@@ -52,7 +52,7 @@ class DefaultExtensionTest(TestCase):
 
     def test_custom_spec_with_classifier__works_for_kwargs_in_init(self):
         self.mapper.add_spec(classifier_func, spec_func)
-        source = namedtuple("SourceObj", ["text", "num"])("text_msg", 11)
+        source = namedtuple("SourceObj", ["text", "num"])("text_msg", 11)  # type: ignore [call-arg]
 
         obj = self.mapper.to(ClassWithoutInitAttrDef).map(source)
 

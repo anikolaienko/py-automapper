@@ -21,7 +21,11 @@ def __init_method_spec_func__(target_cls: Type[T]) -> Iterable[str]:
     If __init__ of the target class accepts `*args` or `**kwargs`
     then current spec function won't work properly and another spec_func should be added
     """
-    return (field for field in target_cls.__init__.__annotations__.keys() if field not in _IGNORED_FIELDS)
+    return (
+        field
+        for field in target_cls.__init__.__annotations__.keys()
+        if field not in _IGNORED_FIELDS
+    )
 
 
 def extend(mapper: Mapper) -> None:

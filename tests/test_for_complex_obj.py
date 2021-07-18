@@ -1,12 +1,9 @@
 from unittest import TestCase
-from typing import Protocol, TypeVar, Iterable, Optional
+from typing import Protocol, TypeVar, Iterable, Optional, Any
 
 import pytest
 
-from automapper import (
-    create_mapper,
-    CircularReferenceError
-)
+from automapper import create_mapper, CircularReferenceError
 
 
 T = TypeVar("T")
@@ -35,7 +32,7 @@ class AnotherClass:
 
 
 class ClassWithoutInitAttrDef:
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self.data = kwargs.copy()
 
     @classmethod
@@ -76,15 +73,12 @@ class MappingComplexObjTest(TestCase):
         self.mapper = create_mapper()
 
     def test_map__complext_obj(self):
-        complex_obj = ComplexClass(
-            obj=ChildClass(15, "nested_obj_msg", True),
-            text="obj_msg"
-        )
+        complex_obj = ComplexClass(obj=ChildClass(15, "nested_obj_msg", True), text="obj_msg")
         self.mapper.add(ChildClass, AnotherClass)
         self.mapper.add(ComplexClass, AnotherComplexClass)
 
-        result = self.mapper.map(complex_obj)
-        
+        result: AnotherComplexClass = self.mapper.map(complex_obj)
+
         assert isinstance(result, AnotherComplexClass)
         assert isinstance(result.obj, AnotherClass)
         assert result.obj.text == "nested_obj_msg"
@@ -98,7 +92,7 @@ class MappingComplexObjTest(TestCase):
         self.mapper.add(ComplexObjWithCircularRef, ComplexObjWithCircularRef)
         self.mapper.add(WrapperClass, WrapperClass)
 
-        result = self.mapper.map(source)
+        result: ComplexObjWithCircularRef = self.mapper.map(source)
         assert result.child.num == 15
 
         # adding circular ref

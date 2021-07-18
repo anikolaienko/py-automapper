@@ -105,7 +105,7 @@ class Mapper:
             )
         self._mappings[source_cls] = target_cls
 
-    def map(self, obj: object, skip_none_values: bool = False) -> object:
+    def map(self, obj: object, skip_none_values: bool = False) -> T:
         """Produces output object mapped from source object and custom arguments"""
         obj_type = type(obj)
         if obj_type not in self._mappings:
@@ -154,7 +154,9 @@ class Mapper:
                 else:
                     result = type(obj)(  # type: ignore [call-arg]
                         [
-                            self._map_subobject(x, _visited_stack, skip_none_values=skip_none_values)
+                            self._map_subobject(
+                                x, _visited_stack, skip_none_values=skip_none_values
+                            )
                             for x in cast(Iterable[Any], obj)
                         ]
                     )
@@ -162,7 +164,7 @@ class Mapper:
                 result = deepcopy(obj)
 
             _visited_stack.remove(obj_id)
-        
+
         return result
 
     def _map_common(

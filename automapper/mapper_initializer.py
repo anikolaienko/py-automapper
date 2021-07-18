@@ -14,8 +14,7 @@ log = logging.getLogger("automapper")
 
 
 def create_mapper() -> Mapper:
-    """Returns a Mapper instance with preloaded extensions
-    """
+    """Returns a Mapper instance with preloaded extensions"""
     mapper = Mapper()
     extensions = glob.glob(join(dirname(__file__), __EXTENSIONS_FOLDER__, "*.py"))
     for extension in extensions:

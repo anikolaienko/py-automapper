@@ -1,13 +1,9 @@
 from unittest import TestCase
-from typing import Protocol, Type, TypeVar, Iterable, cast
+from typing import Protocol, Type, TypeVar, Iterable, Optional, Any, cast
 
 import pytest
 
-from automapper import (
-    create_mapper,
-    MappingError,
-    DuplicatedRegistrationError
-)
+from automapper import create_mapper, MappingError, DuplicatedRegistrationError
 
 
 T = TypeVar("T")
@@ -30,13 +26,13 @@ class ChildClass(ParentClass):
 
 
 class AnotherClass:
-    def __init__(self, text: str, num: int) -> None:
+    def __init__(self, text: Optional[str], num: int) -> None:
         self.text = text
         self.num = num
 
 
 class ClassWithoutInitAttrDef:
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self.data = kwargs.copy()
 
     @classmethod
@@ -82,7 +78,9 @@ class AutomapperTest(TestCase):
     def test_add_spec__adds_to_internal_collection_for_classifier(self):
         self.mapper.add_spec(classifier_func, spec_func)
         assert classifier_func in self.mapper._classifier_specs
-        assert ["text", "num"] == self.mapper._classifier_specs[classifier_func](ClassWithoutInitAttrDef)
+        assert ["text", "num"] == self.mapper._classifier_specs[classifier_func](
+            ClassWithoutInitAttrDef
+        )
 
     def test_add_spec__error_on_duplicated_registration(self):
         self.mapper.add_spec(classifier_func, spec_func)
@@ -95,7 +93,7 @@ class AutomapperTest(TestCase):
 
         self.mapper.add_spec(AnotherClass, custom_spec_func)
         self.mapper.add(ChildClass, AnotherClass)
-        result = self.mapper.map(ChildClass(10, "test_message", True))
+        result: AnotherClass = self.mapper.map(ChildClass(10, "test_message", True))
 
         assert isinstance(result, AnotherClass)
         assert result.text == "test_message"
@@ -119,8 +117,10 @@ class AutomapperTest(TestCase):
 
     def test_map__skip_none_values_from_source_object(self):
         self.mapper.add_spec(classifier_func, spec_func)
-        
-        obj = self.mapper.to(ClassWithoutInitAttrDef).map(AnotherClass(None, 11), skip_none_values=True)
+
+        obj = self.mapper.to(ClassWithoutInitAttrDef).map(
+            AnotherClass(None, 11), skip_none_values=True
+        )
 
         assert "text" not in obj.data
         assert "num" in obj.data
@@ -130,8 +130,8 @@ class AutomapperTest(TestCase):
         self.mapper.add_spec(classifier_func, spec_func)
 
         obj = self.mapper.to(ClassWithoutInitAttrDef).map(AnotherClass(None, 11))
-        
+
         assert "text" in obj.data
         assert "num" in obj.data
-        assert obj.data.get("text") == None
+        assert obj.data.get("text") is None
         assert obj.data.get("num") == 11
