@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "py-automapper"
-version = "0.0.1"
+version = "0.1.1"
 description = "Library for automatically mapping one object to another"
 authors = ["Andrii Nikolaienko <anikolaienko14@gmail.com>"]
 license = "MIT"
@@ -14,7 +14,7 @@ packages = [
 include = ["CHANGELOG.md", "LICENSE", "README.md"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.6",
