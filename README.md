@@ -1,23 +1,77 @@
+<img src="logo.png" align="left" style="width:128px; margin-right: 20px;" />
+
 # py-automapper
-Python object auto mapper
 
-Current mapper can be useful for multilayer architecture which requires constant mapping between objects from separate layers (data layer, presentation layer, etc).
+**Version**
+1.1.0
 
-For more information read the [documentation](https://anikolaienko.github.io/py-automapper).
+**Author**
+anikolaienko
 
-## Usage example:
+**Copyright**
+anikolaienko
+
+**License**
+The MIT License (MIT)
+
+**Last updated**
+5 Jan 2022
+
+**Package Download**
+https://pypi.python.org/pypi/py-automapper
+
+**Build Status**
+TODO
+
+---
+
+## Versions
+Check [CHANGELOG.md](/CHANGELOG.md)
+
+## About
+
+**Python auto mapper** is useful for multilayer architecture which requires constant mapping between objects from separate layers (data layer, presentation layer, etc).
+
+Inspired by: [object-mapper](https://github.com/marazt/object-mapper)
+
+The major advantage of py-automapper is its extensibility, that allows it to map practically any type, discover custom class fields and customize mapping rules. Read more in [documentation](https://anikolaienko.github.io/py-automapper).
+
+## Usage
+Install package:
+```bash
+pip install py-automapper
+```
+
+Simple mapping:
 ```python
 from automapper import mapper
 
-# Add automatic mappings
+class SourceClass:
+    name: str
+    age: int
+    profession: str
+
+class TargetClass:
+    name: str
+    age: int
+
+# Register mapping
 mapper.add(SourceClass, TargetClass)
 
-# Map object of SourceClass to output object of TargetClass
-mapper.map(obj)
+source_obj = SourceClass("Andrii", 30, "software developer")
 
-# Map object to AnotherTargetClass not added to mapping collection
-mapper.to(AnotherTargetClass).map(obj)
+# Map object
+target_obj = mapper.map(obj)
 
+print(target_obj)
+```
+
+One time mapping without registering in mapper:
+```python
+target_obj = mapper.to(TargetClass).map(source_obj)
+```
+
+```python
 # Override specific fields or provide missing ones
 mapper.map(obj, field1=value1, field2=value2)
 
