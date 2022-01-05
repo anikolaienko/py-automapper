@@ -37,6 +37,7 @@ mypy = "^0.910"
 tortoise-orm = "^0.17.4"
 pydantic = "^1.8.2"
 coverage = "^6.2"
+pre-commit = "^2.16.0"
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]

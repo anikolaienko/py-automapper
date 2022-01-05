@@ -1,0 +1,26 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+    - repo: local
+      hooks:
+        - id: black
+          name: black
+          description: "Black: The uncompromising Python code formatter"
+          entry: black
+          language: python
+          require_serial: true
+          types_or: [python, pyi]
+        - id: flake8
+          name: flake8
+          description: '`flake8` is a command-line utility for enforcing style consistency across Python projects.'
+          entry: flake8
+          language: python
+          types: [python]
+          require_serial: true
+        - id: mypy
+          name: mypy
+          description: 'Mypy is a static type checker for Python 3'
+          entry: mypy
+          language: python
+          types: [python]
+          require_serial: true
