@@ -97,22 +97,32 @@ class Mapper:
         else:
             raise ValueError("Incorrect type of the classifier argument")
 
-    def add(self, source_cls: Type[S], target_cls: Type[T]) -> None:
-        """Adds mapping between object of source class to form an object of target class"""
-        if source_cls in self._mappings:
+    def add(self, source_cls: Type[S], target_cls: Type[T], override: bool = False) -> None:
+        """Adds mapping between object of `source class` to an object of `target class`.
+
+        Parameters
+        ----------
+        source_cls : Type
+            Source class to map from
+        target_cls : Type
+            Target class to map to
+        override : bool, optional
+            Override existing `source class` mapping to use new `target class`
+        """
+        if source_cls in self._mappings and not override:
             raise DuplicatedRegistrationError(
                 f"source_cls {source_cls} was already added for mapping"
             )
         self._mappings[source_cls] = target_cls
 
-    def map(self, obj: object, skip_none_values: bool = False) -> T:
+    def map(self, obj: object, skip_none_values: bool = False, **kwargs: Any) -> T:
         """Produces output object mapped from source object and custom arguments"""
         obj_type = type(obj)
         if obj_type not in self._mappings:
             raise MappingError(f"Missing mapping type for input type {obj_type}")
 
         return self._map_common(
-            obj, self._mappings[obj_type], set(), skip_none_values=skip_none_values
+            obj, self._mappings[obj_type], set(), skip_none_values=skip_none_values, **kwargs
         )
 
     def _get_fields(self, target_cls: Type[T]) -> Iterable[str]:
@@ -191,8 +201,13 @@ class Mapper:
 
         mapped_values: Dict[str, Any] = {}
         for field_name in target_cls_fields:
-            if field_name in kwargs or hasattr(obj, field_name):
-                value = kwargs[field_name] if field_name in kwargs else getattr(obj, field_name)
+            if field_name in kwargs or hasattr(obj, field_name) or field_name in obj:
+                if field_name in kwargs:
+                    value = kwargs[field_name]
+                elif hasattr(obj, field_name):
+                    value = getattr(obj, field_name)
+                else:
+                    value = obj[field_name]
 
                 if value is not None:
                     mapped_values[field_name] = self._map_subobject(
