@@ -12,7 +12,9 @@ def __init_method_classifier__(target_cls: Type[T]) -> bool:
     return (
         hasattr(target_cls, "__init__")
         and hasattr(getattr(target_cls, "__init__"), "__annotations__")
-        and isinstance(getattr(getattr(target_cls, "__init__"), "__annotations__"), dict)
+        and isinstance(
+            getattr(getattr(target_cls, "__init__"), "__annotations__"), dict
+        )
     )
 
 

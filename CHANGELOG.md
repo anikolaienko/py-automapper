@@ -1,3 +1,6 @@
+1.0.0 - 2022/01/05
+* Finalized documentation, fixed defects
+
 0.1.1 - 2021/07/18
 * No changes, set version as Alpha
 

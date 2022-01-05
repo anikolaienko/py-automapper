@@ -22,7 +22,9 @@ class ChildClass(ParentClass):
 
     @classmethod
     def fields(cls) -> Iterable[str]:
-        return (field for field in cls.__init__.__annotations__.keys() if field != "return")
+        return (
+            field for field in cls.__init__.__annotations__.keys() if field != "return"
+        )
 
 
 class AnotherClass:
@@ -68,12 +70,16 @@ class AutomapperTest(TestCase):
     def test_add_spec__adds_to_internal_collection(self):
         self.mapper.add_spec(ParentClass, custom_spec_func)
         assert ParentClass in self.mapper._class_specs
-        assert ["num", "text", "flag"] == self.mapper._class_specs[ParentClass](ChildClass)
+        assert ["num", "text", "flag"] == self.mapper._class_specs[ParentClass](
+            ChildClass
+        )
 
     def test_add_spec__error_on_adding_same_class_spec(self):
         self.mapper.add_spec(ParentClass, custom_spec_func)
         with pytest.raises(DuplicatedRegistrationError):
-            self.mapper.add_spec(ParentClass, lambda concrete_type: ["field1", "field2"])
+            self.mapper.add_spec(
+                ParentClass, lambda concrete_type: ["field1", "field2"]
+            )
 
     def test_add_spec__adds_to_internal_collection_for_classifier(self):
         self.mapper.add_spec(classifier_func, spec_func)
@@ -85,7 +91,9 @@ class AutomapperTest(TestCase):
     def test_add_spec__error_on_duplicated_registration(self):
         self.mapper.add_spec(classifier_func, spec_func)
         with pytest.raises(DuplicatedRegistrationError):
-            self.mapper.add_spec(classifier_func, lambda concrete_type: ["field1", "field2"])
+            self.mapper.add_spec(
+                classifier_func, lambda concrete_type: ["field1", "field2"]
+            )
 
     def test_add__appends_class_to_class_mapping(self):
         with pytest.raises(MappingError):

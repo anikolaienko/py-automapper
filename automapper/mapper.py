@@ -1,8 +1,24 @@
-from typing import Any, Union, Type, TypeVar, Dict, Set, Callable, Iterable, Generic, overload, cast
+from typing import (
+    Any,
+    Union,
+    Type,
+    TypeVar,
+    Dict,
+    Set,
+    Callable,
+    Iterable,
+    Generic,
+    overload,
+    cast,
+)
 from copy import deepcopy
 import inspect
 
-from .exceptions import CircularReferenceError, DuplicatedRegistrationError, MappingError
+from .exceptions import (
+    CircularReferenceError,
+    DuplicatedRegistrationError,
+    MappingError,
+)
 
 # Custom Types
 S = TypeVar("S")
@@ -14,8 +30,13 @@ __PRIMITIVE_TYPES = {int, float, complex, str, bytes, bytearray, bool}
 
 
 def is_sequence(obj: Any) -> bool:
-    """Check if object is iteratable"""
+    """Check if object implements `__iter__` method"""
     return hasattr(obj, "__iter__")
+
+
+def is_subscriptable(obj: Any) -> bool:
+    """Check if object implements `__get_item__` method"""
+    return hasattr(obj, "__get_item__")
 
 
 def is_primitive(obj: Any) -> bool:
@@ -68,7 +89,9 @@ class Mapper:
         ...
 
     @overload
-    def add_spec(self, classifier: ClassifierFunction[T], spec_func: SpecFunction[T]) -> None:
+    def add_spec(
+        self, classifier: ClassifierFunction[T], spec_func: SpecFunction[T]
+    ) -> None:
         """Add a spec function for all classes identified by classifier function.
 
         Parameters:
@@ -80,7 +103,9 @@ class Mapper:
         ...
 
     def add_spec(
-        self, classifier: Union[Type[T], ClassifierFunction[T]], spec_func: SpecFunction[T]
+        self,
+        classifier: Union[Type[T], ClassifierFunction[T]],
+        spec_func: SpecFunction[T],
     ) -> None:
         if inspect.isclass(classifier):
             if classifier in self._class_specs:
@@ -97,22 +122,38 @@ class Mapper:
         else:
             raise ValueError("Incorrect type of the classifier argument")
 
-    def add(self, source_cls: Type[S], target_cls: Type[T]) -> None:
-        """Adds mapping between object of source class to form an object of target class"""
-        if source_cls in self._mappings:
+    def add(
+        self, source_cls: Type[S], target_cls: Type[T], override: bool = False
+    ) -> None:
+        """Adds mapping between object of `source class` to an object of `target class`.
+
+        Parameters
+        ----------
+        source_cls : Type
+            Source class to map from
+        target_cls : Type
+            Target class to map to
+        override : bool, optional
+            Override existing `source class` mapping to use new `target class`
+        """
+        if source_cls in self._mappings and not override:
             raise DuplicatedRegistrationError(
                 f"source_cls {source_cls} was already added for mapping"
             )
         self._mappings[source_cls] = target_cls
 
-    def map(self, obj: object, skip_none_values: bool = False) -> T:
+    def map(self, obj: object, skip_none_values: bool = False, **kwargs: Any) -> T:
         """Produces output object mapped from source object and custom arguments"""
         obj_type = type(obj)
         if obj_type not in self._mappings:
             raise MappingError(f"Missing mapping type for input type {obj_type}")
 
         return self._map_common(
-            obj, self._mappings[obj_type], set(), skip_none_values=skip_none_values
+            obj,
+            self._mappings[obj_type],
+            set(),
+            skip_none_values=skip_none_values,
+            **kwargs,
         )
 
     def _get_fields(self, target_cls: Type[T]) -> Iterable[str]:
@@ -125,7 +166,9 @@ class Mapper:
             if classifier(target_cls):
                 return self._classifier_specs[classifier](target_cls)
 
-        raise MappingError(f"No spec function is added for base class of {type(target_cls)}")
+        raise MappingError(
+            f"No spec function is added for base class of {type(target_cls)}"
+        )
 
     def _map_subobject(
         self, obj: S, _visited_stack: Set[int], skip_none_values: bool = False
@@ -140,7 +183,10 @@ class Mapper:
 
         if type(obj) in self._mappings:
             result = self._map_common(
-                obj, self._mappings[type(obj)], _visited_stack, skip_none_values=skip_none_values
+                obj,
+                self._mappings[type(obj)],
+                _visited_stack,
+                skip_none_values=skip_none_values,
             )
         else:
             _visited_stack.add(obj_id)
@@ -148,7 +194,9 @@ class Mapper:
             if is_sequence(obj):
                 if isinstance(obj, dict):
                     result = {
-                        k: self._map_subobject(v, _visited_stack, skip_none_values=skip_none_values)
+                        k: self._map_subobject(
+                            v, _visited_stack, skip_none_values=skip_none_values
+                        )
                         for k, v in obj
                     }
                 else:
@@ -190,9 +238,19 @@ class Mapper:
         target_cls_fields = self._get_fields(target_cls)
 
         mapped_values: Dict[str, Any] = {}
+        is_obj_subscriptable = is_subscriptable(obj)
         for field_name in target_cls_fields:
-            if field_name in kwargs or hasattr(obj, field_name):
-                value = kwargs[field_name] if field_name in kwargs else getattr(obj, field_name)
+            if (
+                field_name in kwargs
+                or hasattr(obj, field_name)
+                or (is_obj_subscriptable and field_name in obj)  # type: ignore [operator]
+            ):
+                if field_name in kwargs:
+                    value = kwargs[field_name]
+                elif hasattr(obj, field_name):
+                    value = getattr(obj, field_name)
+                else:
+                    value = obj[field_name]  # type: ignore [index]
 
                 if value is not None:
                     mapped_values[field_name] = self._map_subobject(
