@@ -1,3 +1,10 @@
+1.0.2 - 2022/07/24
+* Bug fix: pass parameters override in MappingWrapper.map
+* Added support for mapping fields with different names
+
+1.0.1 - 2022/01/05
+* Bug fix
+
 1.0.0 - 2022/01/05
 * Finalized documentation, fixed defects
 

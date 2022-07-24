@@ -6,21 +6,24 @@
     "configurations": [
         {
             "name": "Pytest: Run Tests",
-            "module": "python",
-            "args": ["pytest"],
             "type": "python",
             "request": "launch",
+            "module": "pytest",
+            "args": ["tests/"],
+            "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
-            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "justMyCode": false
         }, {
-            "name": "Debug test",
+            "name": "Python: Debug Current Test",
             "type": "python",
-            "request": "test",
-            "console": "externalTerminal",
-            "justMyCode": false,
-            "stopOnEntry": true,
-            "envFile": "${workspaceFolder}/.env.test",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["${file}"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "justMyCode": false
         }
     ]
 }

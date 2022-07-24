@@ -3,7 +3,7 @@
 # py-automapper
 
 **Version**
-1.0.1
+1.0.2
 
 **Author**
 anikolaienko
@@ -15,7 +15,7 @@ anikolaienko
 The MIT License (MIT)
 
 **Last updated**
-5 Jan 2022
+24 Jul 2022
 
 **Package Download**
 https://pypi.python.org/pypi/py-automapper
@@ -25,10 +25,19 @@ TODO
 
 ---
 
-## Versions
+Table of Contents:
+- [py-automapper](#py-automapper)
+- [Versions](#versions)
+- [About](#about)
+- [Usage](#usage)
+  - [Different field names](#different-field-names)
+  - [Overwrite field value in mapping](#overwrite-field-value-in-mapping)
+  - [Extensions](#extensions)
+
+# Versions
 Check [CHANGELOG.md](/CHANGELOG.md)
 
-## About
+# About
 
 **Python auto mapper** is useful for multilayer architecture which requires constant mapping between objects from separate layers (data layer, presentation layer, etc).
 
@@ -36,82 +45,79 @@ Inspired by: [object-mapper](https://github.com/marazt/object-mapper)
 
 The major advantage of py-automapper is its extensibility, that allows it to map practically any type, discover custom class fields and customize mapping rules. Read more in [documentation](https://anikolaienko.github.io/py-automapper).
 
-## Usage
+# Usage
 Install package:
 ```bash
 pip install py-automapper
 ```
 
-Simple mapping:
+Let's say we have domain model `UserInfo` and its API representation `PublicUserInfo` with `age` field missing:
 ```python
-from automapper import mapper
-
-class SourceClass:
+class UserInfo:
     def __init__(self, name: str, age: int, profession: str):
         self.name = name
         self.age = age
         self.profession = profession
 
-class TargetClass:
-    def __init__(self, name: str, age: int):
+class PublicUserInfo:
+    def __init__(self, name: str, profession: str):
         self.name = name
-        self.age = age
+        self.profession = profession
 
-# Register mapping
-mapper.add(SourceClass, TargetClass)
-
-source_obj = SourceClass("Andrii", 30, "software developer")
-
-# Map object
-target_obj = mapper.map(source_obj)
-
-# or one time mapping without registering in mapper
-target_obj = mapper.to(TargetClass).map(source_obj)
-
-print(f"Name: {target_obj.name}; Age: {target_obj.age}; has profession: {hasattr(target_obj, 'profession')}")
-
-# Output:
-# Name: Andrii; age: 30; has profession: False
+user_info = UserInfo("John Malkovich", 35, "engineer")
 ```
-
-## Override fields
-If you want to override some field and/or add mapping for field not existing in SourceClass:
+To create `PublicUserInfo` object:
 ```python
-from typing import List
 from automapper import mapper
 
-class SourceClass:
-    def __init__(self, name: str, age: int):
-        self.name = name
-        self.age = age
+public_user_info = mapper.to(PublicUserInfo).map(user_info)
 
-class TargetClass:
-    def __init__(self, name: str, age: int, hobbies: List[str]):
-        self.name = name
-        self.age = age
-        self.hobbies = hobbies
+print(vars(public_user_info))
+# {'name': 'John Malkovich', 'profession': 'engineer'}
+```
+You can register which class should map to which first:
+```python
+# Register
+mapper.add(UserInfo, PublicUserInfo)
 
-mapper.add(SourceClass, TargetClass)
+public_user_info = mapper.map(user_info)
 
-source_obj = SourceClass("Andrii", 30)
-hobbies = ["Diving", "Languages", "Sports"]
+print(vars(public_user_info))
+# {'name': 'John Malkovich', 'profession': 'engineer'}
+```
 
-# Override `age` and provide missing field `hobbies`
-target_obj = mapper.map(source_obj, age=25, hobbies=hobbies)
+## Different field names
+If your target class field name is different from source class.
+```python
+class PublicUserInfo:
+    def __init__(self, full_name: str, profession: str):
+        self.full_name = full_name       # UserInfo has `name` instead
+        self.profession = profession
+```
+Simple map:
+```python
+public_user_info = mapper.to(PublicUserInfo).map(user_info, fields_mapping={
+    "full_name": user_info.name
+})
+```
+Preregister and map:
+```python
+mapper.add(UserInfo, PublicUserInfo, fields_mapping={"full_name": "UserInfo.name"})
+public_user_info = mapper.map(user_info)
 
-print(f"Name: {target_obj.name}; Age: {target_obj.age}; hobbies: {target_obj.hobbies}")
-# Output:
-# Name: Andrii; Age: 25; hobbies: ['Diving', 'Languages', 'Sports']
+print(vars(public_user_info))
+# {'full_name': 'John Malkovich', 'profession': 'engineer'}
+```
 
-# Modifying initial `hobbies` object will not modify `target_obj`
-hobbies.pop()
+## Overwrite field value in mapping
+Very easy if you want to field just have different value, you provide a new value:
+```python
+public_user_info = mapper.to(PublicUserInfo).map(user_info, fields_mapping={
+    "full_name": "John Cusack"
+})
 
-print(f"Hobbies: {hobbies}")
-print(f"Target hobbies: {target_obj.hobbies}")
-
-# Output:
-# Hobbies: ['Diving', 'Languages']
-# Target hobbies: ['Diving', 'Languages', 'Sports']
+print(vars(public_user_info))
+# {'full_name': 'John Cusack', 'profession': 'engineer'}
 ```
 
 ## Extensions

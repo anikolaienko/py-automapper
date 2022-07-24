@@ -1,5 +1,7 @@
 from typing import (
     Any,
+    Optional,
+    Tuple,
     Union,
     Type,
     TypeVar,
@@ -25,6 +27,7 @@ S = TypeVar("S")
 T = TypeVar("T")
 ClassifierFunction = Callable[[Type[T]], bool]
 SpecFunction = Callable[[Type[T]], Iterable[str]]
+FieldsMap = Optional[Dict[str, Any]]
 
 __PRIMITIVE_TYPES = {int, float, complex, str, bytes, bytearray, bool}
 
@@ -56,22 +59,32 @@ class MappingWrapper(Generic[T]):
         self.__target_cls = target_cls
         self.__mapper = mapper
 
-    def map(self, obj: S, skip_none_values: bool = False, **kwargs: Any) -> T:
+    def map(
+        self,
+        obj: S,
+        *,
+        skip_none_values: bool = False,
+        fields_mapping: FieldsMap = None,
+    ) -> T:
         """Produces output object mapped from source object and custom arguments
 
         Parameters:
             skip_none_values - do not map fields that has None value
-            **kwargs - custom mappings and fields overrides
+            fields_mapping - mapping for fields with different names
         """
         return self.__mapper._map_common(
-            obj, self.__target_cls, set(), skip_none_values=skip_none_values
+            obj,
+            self.__target_cls,
+            set(),
+            skip_none_values=skip_none_values,
+            fields_mapping=fields_mapping,
         )
 
 
 class Mapper:
     def __init__(self) -> None:
         """Initializes internal containers"""
-        self._mappings: Dict[Type[S], Type[T]] = {}  # type: ignore [valid-type]
+        self._mappings: Dict[Type[S], Tuple[T, FieldsMap]] = {}  # type: ignore [valid-type]
         self._class_specs: Dict[Type[T], SpecFunction[T]] = {}  # type: ignore [valid-type]
         self._classifier_specs: Dict[  # type: ignore [valid-type]
             ClassifierFunction[T], SpecFunction[T]
@@ -123,7 +136,11 @@ class Mapper:
             raise ValueError("Incorrect type of the classifier argument")
 
     def add(
-        self, source_cls: Type[S], target_cls: Type[T], override: bool = False
+        self,
+        source_cls: Type[S],
+        target_cls: Type[T],
+        override: bool = False,
+        fields_mapping: FieldsMap = None,
     ) -> None:
         """Adds mapping between object of `source class` to an object of `target class`.
 
@@ -140,20 +157,45 @@ class Mapper:
             raise DuplicatedRegistrationError(
                 f"source_cls {source_cls} was already added for mapping"
             )
-        self._mappings[source_cls] = target_cls
+        self._mappings[source_cls] = (target_cls, fields_mapping)
 
-    def map(self, obj: object, skip_none_values: bool = False, **kwargs: Any) -> T:
+    def map(
+        self,
+        obj: object,
+        *,
+        skip_none_values: bool = False,
+        fields_mapping: FieldsMap = None,
+    ) -> T:
         """Produces output object mapped from source object and custom arguments"""
         obj_type = type(obj)
         if obj_type not in self._mappings:
             raise MappingError(f"Missing mapping type for input type {obj_type}")
+        obj_type_preffix = f"{obj_type.__name__}."
+
+        target_cls, target_cls_field_mappings = self._mappings[obj_type]
+
+        common_fields_mapping = fields_mapping
+        if target_cls_field_mappings:
+            # transform mapping if it's from source class field
+            common_fields_mapping = {
+                target_obj_field: getattr(obj, source_field[len(obj_type_preffix) :])
+                if isinstance(source_field, str)
+                and source_field.startswith(obj_type_preffix)
+                else source_field
+                for target_obj_field, source_field in target_cls_field_mappings.items()
+            }
+            if fields_mapping:
+                common_fields_mapping = {
+                    **common_fields_mapping,
+                    **fields_mapping,
+                }  # merge two dict into one, fields_mapping has priority
 
         return self._map_common(
             obj,
-            self._mappings[obj_type],
+            target_cls,
             set(),
             skip_none_values=skip_none_values,
-            **kwargs,
+            fields_mapping=common_fields_mapping,
         )
 
     def _get_fields(self, target_cls: Type[T]) -> Iterable[str]:
@@ -182,11 +224,9 @@ class Mapper:
             raise CircularReferenceError()
 
         if type(obj) in self._mappings:
-            result = self._map_common(
-                obj,
-                self._mappings[type(obj)],
-                _visited_stack,
-                skip_none_values=skip_none_values,
+            target_cls, _ = self._mappings[type(obj)]
+            result: Any = self._map_common(
+                obj, target_cls, _visited_stack, skip_none_values=skip_none_values
             )
         else:
             _visited_stack.add(obj_id)
@@ -221,13 +261,13 @@ class Mapper:
         target_cls: Type[T],
         _visited_stack: Set[int],
         skip_none_values: bool = False,
-        **kwargs: Any,
+        fields_mapping: FieldsMap = None,
     ) -> T:
         """Produces output object mapped from source object and custom arguments
 
         Parameters:
             skip_none_values - do not map fields that has None value
-            **kwargs - custom mappings and fields overrides
+            fields_mapping - fields mappings for fields with different names
         """
         obj_id = id(obj)
 
@@ -241,12 +281,12 @@ class Mapper:
         is_obj_subscriptable = is_subscriptable(obj)
         for field_name in target_cls_fields:
             if (
-                field_name in kwargs
+                (fields_mapping and field_name in fields_mapping)
                 or hasattr(obj, field_name)
                 or (is_obj_subscriptable and field_name in obj)  # type: ignore [operator]
             ):
-                if field_name in kwargs:
-                    value = kwargs[field_name]
+                if fields_mapping and field_name in fields_mapping:
+                    value = fields_mapping[field_name]
                 elif hasattr(obj, field_name):
                     value = getattr(obj, field_name)
                 else:
