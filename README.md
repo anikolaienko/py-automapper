@@ -100,7 +100,7 @@ public_user_info = mapper.to(PublicUserInfo).map(user_info, fields_mapping={
     "full_name": user_info.name
 })
 ```
-Preregister and map:
+Preregister and map. Source field should start with class name followed by period sign and field name:
 ```python
 mapper.add(UserInfo, PublicUserInfo, fields_mapping={"full_name": "UserInfo.name"})
 public_user_info = mapper.map(user_info)
