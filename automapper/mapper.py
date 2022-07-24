@@ -237,7 +237,7 @@ class Mapper:
                         k: self._map_subobject(
                             v, _visited_stack, skip_none_values=skip_none_values
                         )
-                        for k, v in obj
+                        for k, v in obj.items()
                     }
                 else:
                     result = type(obj)(  # type: ignore [call-arg]

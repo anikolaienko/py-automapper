@@ -1,6 +1,9 @@
+1.0.3 - 2022/07/24
+* Fixed issue with dictionary collection: https://github.com/anikolaienko/py-automapper/issues/4
+
 1.0.2 - 2022/07/24
 * Bug fix: pass parameters override in MappingWrapper.map
-* Added support for mapping fields with different names
+* Added support for mapping fields with different names: https://github.com/anikolaienko/py-automapper/issues/3
 
 1.0.1 - 2022/01/05
 * Bug fix
