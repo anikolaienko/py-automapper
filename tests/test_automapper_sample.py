@@ -22,7 +22,7 @@ class PublicUserInfoDiff:
 
 def test_map__field_with_same_name():
     user_info = UserInfo("John Malkovich", 35, "engineer")
-    public_user_info: PublicUserInfo = mapper.to(PublicUserInfo).map(
+    public_user_info = mapper.to(PublicUserInfo).map(
         user_info, fields_mapping={"full_name": user_info.name}
     )
 
@@ -58,7 +58,7 @@ def test_map__field_with_different_name_register():
 def test_map__override_field_value():
     try:
         user_info = UserInfo("John Malkovich", 35, "engineer")
-        public_user_info: PublicUserInfo = mapper.to(PublicUserInfo).map(
+        public_user_info = mapper.to(PublicUserInfo).map(
             user_info, fields_mapping={"name": "John Cusack"}
         )
 

@@ -301,7 +301,7 @@ class Mapper:
 
         _visited_stack.remove(obj_id)
 
-        return target_cls(**mapped_values)  # type: ignore [call-arg]
+        return cast(target_cls, target_cls(**mapped_values))  # type: ignore [call-arg, redundant-cast, valid-type]
 
     def to(self, target_cls: Type[T]) -> MappingWrapper[T]:
         """Specify target class to map source object to"""

@@ -1,3 +1,7 @@
+1.0.4 - 2022/07/25
+* Added better description for usage with Pydantic and TortoiseORM
+* Improved type support
+
 1.0.3 - 2022/07/24
 * Fixed issue with dictionary collection: https://github.com/anikolaienko/py-automapper/issues/4
 

@@ -3,7 +3,7 @@
 # py-automapper
 
 **Version**
-1.0.3
+1.0.4
 
 **Author**
 anikolaienko
@@ -33,6 +33,9 @@ Table of Contents:
   - [Different field names](#different-field-names)
   - [Overwrite field value in mapping](#overwrite-field-value-in-mapping)
   - [Extensions](#extensions)
+  - [Pydantic/FastAPI Support](#pydanticfastapi-support)
+  - [TortoiseORM Support](#tortoiseorm-support)
+  - [Create your own extension (Advanced)](#create-your-own-extension-advanced)
 
 # Versions
 Check [CHANGELOG.md](/CHANGELOG.md)
@@ -120,14 +123,81 @@ print(vars(public_user_info))
 # {'full_name': 'John Cusack', 'profession': 'engineer'}
 ```
 
+
 ## Extensions
-`py-automapper` has few predefined extensions for mapping to classes for frameworks:
+`py-automapper` has few predefined extensions for mapping support to classes for frameworks:
 * [FastAPI](https://github.com/tiangolo/fastapi) and [Pydantic](https://github.com/samuelcolvin/pydantic)
 * [TortoiseORM](https://github.com/tortoise/tortoise-orm)
 
+## Pydantic/FastAPI Support
+Out of the box Pydantic models support:
+```python
+from pydantic import BaseModel
+from typing import List
+from automapper import mapper
+
+class UserInfo(BaseModel):
+    id: int
+    full_name: str
+    public_name: str
+    hobbies: List[str]
+
+class PublicUserInfo(BaseModel):
+    id: int
+    public_name: str
+    hobbies: List[str]
+
+obj = UserInfo(
+    id=2,
+    full_name="Danny DeVito",
+    public_name="dannyd",
+    hobbies=["acting", "comedy", "swimming"]
+)
+
+result = default_mapper.to(PublicUserInfo).map(obj)
+# same behaviour with preregistered mapping
+
+print(vars(result))
+# {'id': 2, 'public_name': 'dannyd', 'hobbies': ['acting', 'comedy', 'swimming']}
+```
+
+## TortoiseORM Support
+Out of the box TortoiseORM models support:
+```python
+from tortoise import Model, fields
+from automapper import mapper
+
+class UserInfo(Model):
+    id = fields.IntField(pk=True)
+    full_name = fields.TextField()
+    public_name = fields.TextField()
+    hobbies = fields.JSONField()
+
+class PublicUserInfo(Model):
+    id = fields.IntField(pk=True)
+    public_name = fields.TextField()
+    hobbies = fields.JSONField()
+
+obj = UserInfo(
+    id=2,
+    full_name="Danny DeVito",
+    public_name="dannyd",
+    hobbies=["acting", "comedy", "swimming"],
+    using_db=True
+)
+
+result = default_mapper.to(PublicUserInfo).map(obj)
+# same behaviour with preregistered mapping
+
+# filtering out protected fields that start with underscore "_..."
+print({key: value for key, value in vars(result) if not key.startswith("_")})
+# {'id': 2, 'public_name': 'dannyd', 'hobbies': ['acting', 'comedy', 'swimming']}
+```
+
+## Create your own extension (Advanced)
 When you first time import `mapper` from `automapper` it checks default extensions and if modules are found for these extensions, then they will be automatically loaded for default `mapper` object.
 
-What does extension do? To know what fields in Target class are available for mapping `py-automapper` need to extract the list of these fields. There is no generic way to do that for all Python objects. For this purpose `py-automapper` uses extensions.
+**What does extension do?** To know what fields in Target class are available for mapping, `py-automapper` needs to know how to extract the list of fields. There is no generic way to do that for all Python objects. For this purpose `py-automapper` uses extensions.
 
 List of default extensions can be found in [/automapper/extensions](/automapper/extensions) folder. You can take a look how it's done for a class with `__init__` method or for Pydantic or TortoiseORM models.
 
