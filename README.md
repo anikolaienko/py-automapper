@@ -1,9 +1,9 @@
-<img src="logo.png" alt="https://raw.githubusercontent.com/anikolaienko/py-automapper/main/logo.png" align="left" style="width:128px; margin-right: 20px;" />
+<img src="logo.png" align="left" style="width:128px; margin-right: 20px;" />
 
 # py-automapper
 
 **Version**
-1.1.1
+1.1.3
 
 **Author**
 anikolaienko
