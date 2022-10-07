@@ -1,10 +1,9 @@
-from unittest import TestCase
-from typing import Iterable, Protocol, Type, TypeVar, Any, cast, runtime_checkable
 from collections import namedtuple
+from typing import Any, Iterable, Protocol, Type, TypeVar, cast, runtime_checkable
+from unittest import TestCase
 
 from automapper import Mapper
 from automapper.extensions.default import extend
-
 
 T = TypeVar("T")
 

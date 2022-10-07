@@ -1,10 +1,8 @@
+from typing import Any, Iterable, Optional, Protocol, TypeVar
 from unittest import TestCase
-from typing import Protocol, TypeVar, Iterable, Optional, Any
 
 import pytest
-
-from automapper import create_mapper, CircularReferenceError
-
+from automapper import CircularReferenceError, create_mapper
 
 T = TypeVar("T")
 

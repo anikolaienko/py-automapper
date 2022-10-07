@@ -1,20 +1,20 @@
+import inspect
+from copy import deepcopy
 from typing import (
     Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
     Optional,
+    Set,
     Tuple,
-    Union,
     Type,
     TypeVar,
-    Dict,
-    Set,
-    Callable,
-    Iterable,
-    Generic,
-    overload,
+    Union,
     cast,
+    overload,
 )
-from copy import deepcopy
-import inspect
 
 from .exceptions import (
     CircularReferenceError,
@@ -165,7 +165,7 @@ class Mapper:
         *,
         skip_none_values: bool = False,
         fields_mapping: FieldsMap = None,
-    ) -> T:
+    ) -> T:  # type: ignore [type-var]
         """Produces output object mapped from source object and custom arguments"""
         obj_type = type(obj)
         if obj_type not in self._mappings:
@@ -301,7 +301,7 @@ class Mapper:
 
         _visited_stack.remove(obj_id)
 
-        return cast(target_cls, target_cls(**mapped_values))  # type: ignore [call-arg, redundant-cast, valid-type]
+        return cast(target_cls, target_cls(**mapped_values))  # type: ignore [valid-type]
 
     def to(self, target_cls: Type[T]) -> MappingWrapper[T]:
         """Specify target class to map source object to"""

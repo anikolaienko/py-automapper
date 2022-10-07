@@ -1,10 +1,12 @@
 from unittest import TestCase
 
+import pytest
+from automapper import Mapper, MappingError
+from automapper import mapper as default_mapper
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
-
-from sqlalchemy import Column, Integer, String
 
 
 class UserInfo(Base):
@@ -13,6 +15,7 @@ class UserInfo(Base):
     full_name = Column(String)
     public_name = Column(String)
     hobbies = Column(String)
+
     def __repr__(self):
         return "<User(full_name='%s', public_name='%s', hobbies='%s')>" % (
             self.full_name,
@@ -20,16 +23,13 @@ class UserInfo(Base):
             self.hobbies,
         )
 
+
 class PublicUserInfo(Base):
-    __tablename__ = 'public_users'
+    __tablename__ = "public_users"
     id = Column(Integer, primary_key=True)
     public_name = Column(String)
     hobbies = Column(String)
 
-import pytest
-
-from automapper import mapper as default_mapper
-from automapper import Mapper, MappingError
 
 class SQLalchemyORMExtensionTest(TestCase):
     """These scenarios are known for ORM systems.
@@ -48,7 +48,6 @@ class SQLalchemyORMExtensionTest(TestCase):
         )
         with pytest.raises(MappingError):
             self.mapper.to(PublicUserInfo).map(obj)
-
 
     def test_map__global_mapper_works_with_provided_sqlalchemy_extension(self):
         obj = UserInfo(
