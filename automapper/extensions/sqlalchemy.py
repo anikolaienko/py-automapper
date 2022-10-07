@@ -1,8 +1,7 @@
-from sqlalchemy import inspect
-
-from typing import Type, Iterable
+from typing import Iterable, Type
 
 from automapper import Mapper
+from sqlalchemy import inspect
 
 
 def sqlalchemy_spec_decide(obj_type: Type[object]) -> bool:

@@ -1,8 +1,7 @@
-from typing import Type, Iterable
-
-from tortoise import Model
+from typing import Iterable, Type
 
 from automapper import Mapper
+from tortoise import Model
 
 
 def spec_function(target_cls: Type[Model]) -> Iterable[str]:

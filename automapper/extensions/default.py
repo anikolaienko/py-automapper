@@ -1,7 +1,6 @@
-from typing import Type, TypeVar, Iterable
+from typing import Iterable, Type, TypeVar
 
 from automapper import Mapper
-
 
 T = TypeVar("T")
 _IGNORED_FIELDS = ("return", "args", "kwargs")

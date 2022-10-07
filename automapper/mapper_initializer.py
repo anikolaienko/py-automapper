@@ -1,8 +1,8 @@
-from os.path import dirname, join, isfile, basename
-import logging
+import glob
 import importlib
 import importlib.util
-import glob
+import logging
+from os.path import basename, dirname, isfile, join
 
 from . import Mapper
 
@@ -28,7 +28,7 @@ def create_mapper() -> Mapper:
                     extension_package = importlib.import_module(
                         __PACKAGE_PATH__ + "." + module_name
                     )
-                    extension_package.extend(mapper)  # type: ignore [attr-defined]
+                    extension_package.extend(mapper)
                 except Exception:
                     log.exception(
                         f"Found module {module_name} but could not load extension for it."

@@ -2,9 +2,9 @@ from typing import List
 from unittest import TestCase
 
 import pytest
+from automapper import Mapper, MappingError
+from automapper import mapper as default_mapper
 from pydantic import BaseModel
-
-from automapper import mapper as default_mapper, Mapper, MappingError
 
 
 class UserInfo(BaseModel):

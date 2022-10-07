@@ -1,10 +1,8 @@
+from typing import Any, Iterable, Optional, Protocol, Type, TypeVar, cast
 from unittest import TestCase
-from typing import Protocol, Type, TypeVar, Iterable, Optional, Any, cast
 
 import pytest
-
-from automapper import create_mapper, MappingError, DuplicatedRegistrationError
-
+from automapper import DuplicatedRegistrationError, MappingError, create_mapper
 
 T = TypeVar("T")
 
@@ -91,9 +89,7 @@ class AutomapperTest(TestCase):
     def test_add_spec__error_on_duplicated_registration(self):
         self.mapper.add_spec(classifier_func, spec_func)
         with pytest.raises(DuplicatedRegistrationError):
-            self.mapper.add_spec(
-                classifier_func, lambda concrete_type: ["field1", "field2"]
-            )
+            self.mapper.add_spec(classifier_func, spec_func)
 
     def test_add__appends_class_to_class_mapping(self):
         with pytest.raises(MappingError):

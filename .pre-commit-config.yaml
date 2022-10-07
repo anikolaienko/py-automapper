@@ -1,26 +1,55 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+files: ".py$"
+exclude: "sphinx-docs/"
 repos:
-    - repo: local
-      hooks:
-        - id: black
-          name: black
-          description: "Black: The uncompromising Python code formatter"
-          entry: black
-          language: python
-          require_serial: true
-          types_or: [python, pyi]
-        - id: flake8
-          name: flake8
-          description: '`flake8` is a command-line utility for enforcing style consistency across Python projects.'
-          entry: flake8
-          language: python
-          types: [python]
-          require_serial: true
-        - id: mypy
-          name: mypy
-          description: 'Mypy is a static type checker for Python 3'
-          entry: mypy
-          language: python
-          types: [python]
-          require_serial: true
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+      - id: black
+        name: black
+        description: "Black: The uncompromising Python code formatter"
+        entry: black
+        language: python
+        require_serial: true
+        types_or: [python, pyi]
+        args: [--config=code-checks/.black.cfg]
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: Run isort to sort imports in Python files
+        files: \.py$|\.pyi$
+        args: [--settings-path=code-checks/.isort.cfg]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: check-merge-conflict
+        name: Check that merge conflicts are not being committed
+      - id: trailing-whitespace
+        name: Remove trailing whitespace at end of line
+      - id: mixed-line-ending
+        name: Detect if mixed line ending is used (\r vs. \r\n)
+      - id: end-of-file-fixer
+        name: Make sure that there is an empty line at the end
+  - repo: https://github.com/PyCQA/flake8
+    rev: 5.0.4
+    hooks:
+      - id: flake8
+        name: flake8
+        description: '`flake8` is a command-line utility for enforcing style consistency across Python projects.'
+        entry: flake8
+        language: python
+        types: [python]
+        require_serial: true
+        args: [--config=code-checks/.flake8]
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        description: 'Optional static typing for Python (installed by Poetry)'
+        entry: mypy
+        language: python
+        require_serial: true
+        types_or: [python, pyi]
+        args: [--config-file=code-checks/.mypy.ini]
