@@ -3,7 +3,7 @@
 # py-automapper
 
 **Version**
-1.0.4
+1.1.0
 
 **Author**
 anikolaienko
@@ -15,7 +15,7 @@ anikolaienko
 The MIT License (MIT)
 
 **Last updated**
-24 Jul 2022
+7 Oct 2022
 
 **Package Download**
 https://pypi.python.org/pypi/py-automapper
@@ -35,6 +35,7 @@ Table of Contents:
   - [Extensions](#extensions)
   - [Pydantic/FastAPI Support](#pydanticfastapi-support)
   - [TortoiseORM Support](#tortoiseorm-support)
+  - [SQLAlchemy Support](#sqlalchemy-support)
   - [Create your own extension (Advanced)](#create-your-own-extension-advanced)
 
 # Versions

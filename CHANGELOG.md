@@ -1,3 +1,7 @@
+1.1.0 - 2022/10/07
+* [g-pichler] Added support for SQLAlchemy models mapping
+* Upgraded code checking tool and improved code formatting
+
 1.0.4 - 2022/07/25
 * Added better description for usage with Pydantic and TortoiseORM
 * Improved type support
