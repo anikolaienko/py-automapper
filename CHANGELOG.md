@@ -1,3 +1,6 @@
+1.1.1 - 2022/10/07
+* Trying to display logo on PyPi page
+
 1.1.0 - 2022/10/07
 * [g-pichler] Added support for SQLAlchemy models mapping
 * Upgraded code checking tool and improved code formatting
