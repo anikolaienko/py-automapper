@@ -128,6 +128,7 @@ print(vars(public_user_info))
 `py-automapper` has few predefined extensions for mapping support to classes for frameworks:
 * [FastAPI](https://github.com/tiangolo/fastapi) and [Pydantic](https://github.com/samuelcolvin/pydantic)
 * [TortoiseORM](https://github.com/tortoise/tortoise-orm)
+* [SQLAlchemy](https://www.sqlalchemy.org/)
 
 ## Pydantic/FastAPI Support
 Out of the box Pydantic models support:
@@ -192,6 +193,49 @@ result = default_mapper.to(PublicUserInfo).map(obj)
 # filtering out protected fields that start with underscore "_..."
 print({key: value for key, value in vars(result) if not key.startswith("_")})
 # {'id': 2, 'public_name': 'dannyd', 'hobbies': ['acting', 'comedy', 'swimming']}
+```
+
+## SQLAlchemy Support
+Out of the box SQLAlchemy models support:
+```python
+from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Integer, String
+from automapper import mapper
+
+Base = declarative_base()
+
+class UserInfo(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    full_name = Column(String)
+    public_name = Column(String)
+    hobbies = Column(String)
+    def __repr__(self):
+        return "<User(full_name='%s', public_name='%s', hobbies='%s')>" % (
+            self.full_name,
+            self.public_name,
+            self.hobbies,
+        )
+
+class PublicUserInfo(Base):
+    __tablename__ = 'public_users'
+    id = Column(Integer, primary_key=True)
+    public_name = Column(String)
+    hobbies = Column(String)
+    
+obj = UserInfo(
+            id=2,
+            full_name="Danny DeVito",
+            public_name="dannyd",
+            hobbies="acting, comedy, swimming",
+        )
+
+result = mapper.to(PublicUserInfo).map(obj)
+# same behaviour with preregistered mapping
+
+# filtering out protected fields that start with underscore "_..."
+print({key: value for key, value in vars(result) if not key.startswith("_")})
+# {'id': 2, 'public_name': 'dannyd', 'hobbies': "acting, comedy, swimming"}
 ```
 
 ## Create your own extension (Advanced)

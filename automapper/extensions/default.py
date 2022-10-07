@@ -15,6 +15,7 @@ def __init_method_classifier__(target_cls: Type[T]) -> bool:
         and isinstance(
             getattr(getattr(target_cls, "__init__"), "__annotations__"), dict
         )
+        and getattr(getattr(target_cls, "__init__"), "__annotations__")
     )
 
 
