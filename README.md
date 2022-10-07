@@ -155,7 +155,7 @@ obj = UserInfo(
     hobbies=["acting", "comedy", "swimming"]
 )
 
-result = default_mapper.to(PublicUserInfo).map(obj)
+result = mapper.to(PublicUserInfo).map(obj)
 # same behaviour with preregistered mapping
 
 print(vars(result))
@@ -187,7 +187,7 @@ obj = UserInfo(
     using_db=True
 )
 
-result = default_mapper.to(PublicUserInfo).map(obj)
+result = mapper.to(PublicUserInfo).map(obj)
 # same behaviour with preregistered mapping
 
 # filtering out protected fields that start with underscore "_..."
