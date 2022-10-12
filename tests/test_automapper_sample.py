@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from automapper import mapper
 
 
@@ -18,10 +19,6 @@ class PublicUserInfoDiff:
     def __init__(self, full_name: str, profession: str):
         self.full_name = full_name
         self.profession = profession
-
-
-from dataclasses import dataclass
-from automapper import mapper
 
 
 @dataclass
