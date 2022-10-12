@@ -9,7 +9,7 @@ from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 
 
-class UserInfo(Base):
+class UserInfo(Base):  # type: ignore[misc,valid-type]
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     full_name = Column(String)
@@ -24,7 +24,7 @@ class UserInfo(Base):
         )
 
 
-class PublicUserInfo(Base):
+class PublicUserInfo(Base):  # type: ignore[misc,valid-type]
     __tablename__ = "public_users"
     id = Column(Integer, primary_key=True)
     public_name = Column(String)
