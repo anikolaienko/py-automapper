@@ -217,7 +217,7 @@ class Mapper:
             if classifier(target_cls):
                 return self._classifier_specs[classifier](target_cls)
 
-        raise MappingError(f"No spec function is added for base class of {type(target_cls)}")
+        raise MappingError(f"No spec function is added for base class of {target_cls.__name__!r}")
 
     def _map_subobject(
         self, obj: S, _visited_stack: Set[int], skip_none_values: bool = False

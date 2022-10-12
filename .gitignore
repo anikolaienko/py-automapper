@@ -130,3 +130,6 @@ dmypy.json
 
 # Coming in future, but not yet
 sphinx-docs/
+
+# PyCharm settings
+.idea/
