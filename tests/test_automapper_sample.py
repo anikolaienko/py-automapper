@@ -67,9 +67,7 @@ def test_map__field_with_different_name():
 
 def test_map__field_with_different_name_register():
     try:
-        mapper.add(
-            UserInfo, PublicUserInfoDiff, fields_mapping={"full_name": "UserInfo.name"}
-        )
+        mapper.add(UserInfo, PublicUserInfoDiff, fields_mapping={"full_name": "UserInfo.name"})
 
         user_info = UserInfo("John Malkovich", 35, "engineer")
         public_user_info: PublicUserInfoDiff = mapper.map(user_info)
@@ -107,8 +105,8 @@ def test_map__override_field_value_register():
 
 
 def test_deepcopy():
-    address = Address(street="Main Street", number=1, zip_code=100001, city='Test City')
-    info = PersonInfo('John Doe', age=35, address=address)
+    address = Address(street="Main Street", number=1, zip_code=100001, city="Test City")
+    info = PersonInfo("John Doe", age=35, address=address)
 
     public_info = mapper.to(PublicPersonInfo).map(info)
     assert address is not public_info.address

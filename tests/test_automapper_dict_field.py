@@ -37,7 +37,9 @@ class AutomapperTest(TestCase):
         public_info = mapper.to(ShopPublicInfo).map(self.shop)
 
         self.assertEqual(public_info.products["magazines"], self.shop.products["magazines"])
-        self.assertNotEqual(id(public_info.products["magazines"]), id(self.shop.products["magazines"]))
+        self.assertNotEqual(
+            id(public_info.products["magazines"]), id(self.shop.products["magazines"])
+        )
 
         self.assertNotEqual(public_info.products["candies"], self.shop.products["candies"])
         self.assertNotEqual(public_info.products["candies"][0], self.shop.products["candies"][0])
@@ -58,7 +60,9 @@ class AutomapperTest(TestCase):
         self.assertNotEqual(public_info.products["magazines"], id(self.shop.products["magazines"]))
 
         self.assertIs(public_info_deep.products, self.shop.products)
-        self.assertEqual(id(public_info_deep.products["magazines"]), id(self.shop.products["magazines"]))
+        self.assertEqual(
+            id(public_info_deep.products["magazines"]), id(self.shop.products["magazines"])
+        )
 
     def test_deepcopy_disabled_in_add(self):
         self.mapper.add(Shop, ShopPublicInfo, deepcopy=False)

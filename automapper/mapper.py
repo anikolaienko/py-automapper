@@ -105,9 +105,7 @@ class Mapper:
         ...
 
     @overload
-    def add_spec(
-        self, classifier: ClassifierFunction[T], spec_func: SpecFunction[T]
-    ) -> None:
+    def add_spec(self, classifier: ClassifierFunction[T], spec_func: SpecFunction[T]) -> None:
         """Add a spec function for all classes identified by classifier function.
 
         Parameters:
@@ -186,8 +184,7 @@ class Mapper:
             # transform mapping if it's from source class field
             common_fields_mapping = {
                 target_obj_field: getattr(obj, source_field[len(obj_type_preffix) :])
-                if isinstance(source_field, str)
-                and source_field.startswith(obj_type_preffix)
+                if isinstance(source_field, str) and source_field.startswith(obj_type_preffix)
                 else source_field
                 for target_obj_field, source_field in target_cls_field_mappings.items()
             }
@@ -220,9 +217,7 @@ class Mapper:
             if classifier(target_cls):
                 return self._classifier_specs[classifier](target_cls)
 
-        raise MappingError(
-            f"No spec function is added for base class of {type(target_cls)}"
-        )
+        raise MappingError(f"No spec function is added for base class of {type(target_cls)}")
 
     def _map_subobject(
         self, obj: S, _visited_stack: Set[int], skip_none_values: bool = False
@@ -246,9 +241,7 @@ class Mapper:
             if is_sequence(obj):
                 if isinstance(obj, dict):
                     result = {
-                        k: self._map_subobject(
-                            v, _visited_stack, skip_none_values=skip_none_values
-                        )
+                        k: self._map_subobject(v, _visited_stack, skip_none_values=skip_none_values)
                         for k, v in obj.items()
                     }
                 else:

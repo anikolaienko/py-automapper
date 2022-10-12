@@ -8,6 +8,4 @@ class MappingError(Exception):
 
 class CircularReferenceError(Exception):
     def __init__(self, *args: object) -> None:
-        super().__init__(
-            "Mapper does not support objects with circular references yet", *args
-        )
+        super().__init__("Mapper does not support objects with circular references yet", *args)
