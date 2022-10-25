@@ -3,7 +3,7 @@
 # py-automapper
 
 **Version**
-1.1.3
+1.2.0
 
 **Author**
 anikolaienko
@@ -32,6 +32,7 @@ Table of Contents:
 - [Usage](#usage)
   - [Different field names](#different-field-names)
   - [Overwrite field value in mapping](#overwrite-field-value-in-mapping)
+  - [Disable Deepcopy](#disable-deepcopy)
   - [Extensions](#extensions)
   - [Pydantic/FastAPI Support](#pydanticfastapi-support)
   - [TortoiseORM Support](#tortoiseorm-support)
@@ -124,9 +125,10 @@ print(vars(public_user_info))
 # {'full_name': 'John Cusack', 'profession': 'engineer'}
 ```
 
-## Use of Deepcopy
-By default, automapper performs a recursive deepcopy() on all attributes. This makes sure that changes in the attributes of the source
-do not affect the target and vice-versa:
+## Disable Deepcopy
+By default, py-automapper performs a recursive `copy.deepcopy()` call on all attributes when copying from source object into target class instance.
+This makes sure that changes in the attributes of the source do not affect the target and vice versa.
+If you need your target and source class share same instances of child objects, set `use_deepcopy=False` in `map` function.
 
 ```python
 from dataclasses import dataclass
@@ -134,10 +136,10 @@ from automapper import mapper
 
 @dataclass
 class Address:
-  street: str
-  number: int
-  zip_code: int
-  city: str
+    street: str
+    number: int
+    zip_code: int
+    city: str
   
 class PersonInfo:
     def __init__(self, name: str, age: int, address: Address):
@@ -149,20 +151,19 @@ class PublicPersonInfo:
     def __init__(self, name: str, address: Address):
         self.name = name
         self.address = address
-        
+
 address = Address(street="Main Street", number=1, zip_code=100001, city='Test City')
 info = PersonInfo('John Doe', age=35, address=address)
 
+# default deepcopy behavior
 public_info = mapper.to(PublicPersonInfo).map(info)
-assert address is not public_info.address
-```
+print("Target public_info.address is same as source address: ", address is public_info.address)
+# Target public_info.address is same as source address: False
 
-To disable this behavior, you may pass `deepcopy=False` to either `mapper.map()` or to `mapper.add()`. If both are passed,
-the argument of the `.map()` call has priority. E.g.
-
-```python
-public_info = mapper.to(PublicPersonInfo).map(info, deepcopy=False)
-assert address is public_info.address
+# disable deepcopy
+public_info = mapper.to(PublicPersonInfo).map(info, use_deepcopy=False)
+print("Target public_info.address is same as source address: ", address is public_info.address)
+# Target public_info.address is same as source address: True
 ```
 
 ## Extensions
