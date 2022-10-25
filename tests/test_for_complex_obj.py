@@ -20,7 +20,9 @@ class ChildClass(ParentClass):
 
     @classmethod
     def fields(cls) -> Iterable[str]:
-        return (field for field in cls.__init__.__annotations__.keys() if field != "return")
+        return (
+            field for field in cls.__init__.__annotations__.keys() if field != "return"
+        )
 
 
 class AnotherClass:
@@ -71,7 +73,9 @@ class MappingComplexObjTest(TestCase):
         self.mapper = create_mapper()
 
     def test_map__complext_obj(self):
-        complex_obj = ComplexClass(obj=ChildClass(15, "nested_obj_msg", True), text="obj_msg")
+        complex_obj = ComplexClass(
+            obj=ChildClass(15, "nested_obj_msg", True), text="obj_msg"
+        )
         self.mapper.add(ChildClass, AnotherClass)
         self.mapper.add(ComplexClass, AnotherComplexClass)
 

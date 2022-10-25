@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from automapper import mapper
 
 
@@ -64,7 +65,9 @@ def test_map__field_with_different_name():
 
 def test_map__field_with_different_name_register():
     try:
-        mapper.add(UserInfo, PublicUserInfoDiff, fields_mapping={"full_name": "UserInfo.name"})
+        mapper.add(
+            UserInfo, PublicUserInfoDiff, fields_mapping={"full_name": "UserInfo.name"}
+        )
 
         user_info = UserInfo("John Malkovich", 35, "engineer")
         public_user_info: PublicUserInfoDiff = mapper.map(user_info)

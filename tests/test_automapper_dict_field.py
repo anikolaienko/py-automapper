@@ -1,7 +1,7 @@
 from typing import Any, Dict
 from unittest import TestCase
 
-from automapper import mapper, create_mapper
+from automapper import create_mapper, mapper
 
 
 class Candy:
@@ -36,17 +36,27 @@ class AutomapperTest(TestCase):
     def test_map__with_dict_field(self):
         public_info = mapper.to(ShopPublicInfo).map(self.shop)
 
-        self.assertEqual(public_info.products["magazines"], self.shop.products["magazines"])
+        self.assertEqual(
+            public_info.products["magazines"], self.shop.products["magazines"]
+        )
         self.assertNotEqual(
             id(public_info.products["magazines"]), id(self.shop.products["magazines"])
         )
 
-        self.assertNotEqual(public_info.products["candies"], self.shop.products["candies"])
-        self.assertNotEqual(public_info.products["candies"][0], self.shop.products["candies"][0])
-        self.assertNotEqual(public_info.products["candies"][1], self.shop.products["candies"][1])
+        self.assertNotEqual(
+            public_info.products["candies"], self.shop.products["candies"]
+        )
+        self.assertNotEqual(
+            public_info.products["candies"][0], self.shop.products["candies"][0]
+        )
+        self.assertNotEqual(
+            public_info.products["candies"][1], self.shop.products["candies"][1]
+        )
 
         self.assertEqual(public_info.products["candies"][0].name, "Reese's cups")
-        self.assertEqual(public_info.products["candies"][0].brand, "The Hershey Company")
+        self.assertEqual(
+            public_info.products["candies"][0].brand, "The Hershey Company"
+        )
 
         self.assertEqual(public_info.products["candies"][1].name, "Snickers")
         self.assertEqual(public_info.products["candies"][1].brand, "Mars, Incorporated")
@@ -56,20 +66,25 @@ class AutomapperTest(TestCase):
         public_info = mapper.to(ShopPublicInfo).map(self.shop)
 
         self.assertIsNot(public_info.products, self.shop.products)
-        self.assertEqual(public_info.products["magazines"], self.shop.products["magazines"])
-        self.assertNotEqual(public_info.products["magazines"], id(self.shop.products["magazines"]))
+        self.assertEqual(
+            public_info.products["magazines"], self.shop.products["magazines"]
+        )
+        self.assertNotEqual(
+            public_info.products["magazines"], id(self.shop.products["magazines"])
+        )
 
         self.assertIs(public_info_deep.products, self.shop.products)
         self.assertEqual(
-            id(public_info_deep.products["magazines"]), id(self.shop.products["magazines"])
+            id(public_info_deep.products["magazines"]),
+            id(self.shop.products["magazines"]),
         )
 
     def test_deepcopy_disabled_in_add(self):
         self.mapper.add(Shop, ShopPublicInfo, deepcopy=False)
-        public_info = self.mapper.map(self.shop)
+        public_info: ShopPublicInfo = self.mapper.map(self.shop)
 
         self.assertIs(public_info.products, self.shop.products)
 
         # Manually enable deepcopy on .map()
-        public_info = self.mapper.map(self.shop, deepcopy=True)
-        self.assertIsNot(public_info.products, self.shop.products)
+        public_info2: ShopPublicInfo = self.mapper.map(self.shop, deepcopy=True)
+        self.assertIsNot(public_info2.products, self.shop.products)
