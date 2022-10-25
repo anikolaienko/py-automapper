@@ -1,7 +1,7 @@
 from typing import Any, Dict
 from unittest import TestCase
 
-from automapper import create_mapper, mapper
+from automapper import mapper
 
 
 class Candy:
@@ -21,7 +21,7 @@ class ShopPublicInfo:
         self.products: Dict[str, Any] = products
 
 
-class AutomapperTest(TestCase):
+class AutomapperDictFieldTest(TestCase):
     def setUp(self) -> None:
         products = {
             "magazines": ["Forbes", "Time", "The New Yorker"],
@@ -31,7 +31,6 @@ class AutomapperTest(TestCase):
             ],
         }
         self.shop = Shop(products=products, annual_income=10000000)
-        self.mapper = create_mapper()
 
     def test_map__with_dict_field(self):
         public_info = mapper.to(ShopPublicInfo).map(self.shop)
