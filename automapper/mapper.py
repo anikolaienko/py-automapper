@@ -242,8 +242,9 @@ class Mapper:
             if classifier(target_cls):
                 return self._classifier_specs[classifier](target_cls)
 
+        target_cls_name = getattr(target_cls, "__name__", type(target_cls))
         raise MappingError(
-            f"No spec function is added for base class of {type(target_cls)}"
+            f"No spec function is added for base class of {target_cls_name!r}"
         )
 
     def _map_subobject(

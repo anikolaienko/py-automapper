@@ -1,5 +1,6 @@
 1.2.0 - 2022/10/25
 * [g-pichler] Ability to disable deepcopy on mapping: `use_deepcopy` flag in `map` method.
+* [g-pichler] Improved error text when no spec function exists for `target class`.
 * Updated doc comments.
 
 1.1.3 - 2022/10/07
