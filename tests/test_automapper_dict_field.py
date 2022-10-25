@@ -61,8 +61,8 @@ class AutomapperTest(TestCase):
         self.assertEqual(public_info.products["candies"][1].name, "Snickers")
         self.assertEqual(public_info.products["candies"][1].brand, "Mars, Incorporated")
 
-    def test_deepcopy_disabled(self):
-        public_info_deep = mapper.to(ShopPublicInfo).map(self.shop, deepcopy=False)
+    def test_map__use_deepcopy_false(self):
+        public_info_deep = mapper.to(ShopPublicInfo).map(self.shop, use_deepcopy=False)
         public_info = mapper.to(ShopPublicInfo).map(self.shop)
 
         self.assertIsNot(public_info.products, self.shop.products)
@@ -78,13 +78,3 @@ class AutomapperTest(TestCase):
             id(public_info_deep.products["magazines"]),
             id(self.shop.products["magazines"]),
         )
-
-    def test_deepcopy_disabled_in_add(self):
-        self.mapper.add(Shop, ShopPublicInfo, deepcopy=False)
-        public_info: ShopPublicInfo = self.mapper.map(self.shop)
-
-        self.assertIs(public_info.products, self.shop.products)
-
-        # Manually enable deepcopy on .map()
-        public_info2: ShopPublicInfo = self.mapper.map(self.shop, deepcopy=True)
-        self.assertIsNot(public_info2.products, self.shop.products)

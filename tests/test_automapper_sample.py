@@ -104,12 +104,12 @@ def test_map__override_field_value_register():
         mapper._mappings.clear()
 
 
-def test_deepcopy():
+def test_map__check_deepcopy_not_applied_if_use_deepcopy_false():
     address = Address(street="Main Street", number=1, zip_code=100001, city="Test City")
     info = PersonInfo("John Doe", age=35, address=address)
 
     public_info = mapper.to(PublicPersonInfo).map(info)
     assert address is not public_info.address
 
-    public_info = mapper.to(PublicPersonInfo).map(info, deepcopy=False)
+    public_info = mapper.to(PublicPersonInfo).map(info, use_deepcopy=False)
     assert address is public_info.address
