@@ -3,7 +3,7 @@
 # py-automapper
 
 **Version**
-1.1.3
+1.2.0
 
 **Author**
 anikolaienko
@@ -32,6 +32,7 @@ Table of Contents:
 - [Usage](#usage)
   - [Different field names](#different-field-names)
   - [Overwrite field value in mapping](#overwrite-field-value-in-mapping)
+  - [Disable Deepcopy](#disable-deepcopy)
   - [Extensions](#extensions)
   - [Pydantic/FastAPI Support](#pydanticfastapi-support)
   - [TortoiseORM Support](#tortoiseorm-support)
@@ -124,6 +125,46 @@ print(vars(public_user_info))
 # {'full_name': 'John Cusack', 'profession': 'engineer'}
 ```
 
+## Disable Deepcopy
+By default, py-automapper performs a recursive `copy.deepcopy()` call on all attributes when copying from source object into target class instance.
+This makes sure that changes in the attributes of the source do not affect the target and vice versa.
+If you need your target and source class share same instances of child objects, set `use_deepcopy=False` in `map` function.
+
+```python
+from dataclasses import dataclass
+from automapper import mapper
+
+@dataclass
+class Address:
+    street: str
+    number: int
+    zip_code: int
+    city: str
+  
+class PersonInfo:
+    def __init__(self, name: str, age: int, address: Address):
+        self.name = name
+        self.age = age
+        self.address = address
+
+class PublicPersonInfo:
+    def __init__(self, name: str, address: Address):
+        self.name = name
+        self.address = address
+
+address = Address(street="Main Street", number=1, zip_code=100001, city='Test City')
+info = PersonInfo('John Doe', age=35, address=address)
+
+# default deepcopy behavior
+public_info = mapper.to(PublicPersonInfo).map(info)
+print("Target public_info.address is same as source address: ", address is public_info.address)
+# Target public_info.address is same as source address: False
+
+# disable deepcopy
+public_info = mapper.to(PublicPersonInfo).map(info, use_deepcopy=False)
+print("Target public_info.address is same as source address: ", address is public_info.address)
+# Target public_info.address is same as source address: True
+```
 
 ## Extensions
 `py-automapper` has few predefined extensions for mapping support to classes for frameworks:
