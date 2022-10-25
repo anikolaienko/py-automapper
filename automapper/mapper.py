@@ -65,12 +65,14 @@ class MappingWrapper(Generic[T]):
         *,
         skip_none_values: bool = False,
         fields_mapping: FieldsMap = None,
+        deepcopy: bool = True,
     ) -> T:
         """Produces output object mapped from source object and custom arguments
 
         Parameters:
             skip_none_values - do not map fields that has None value
             fields_mapping - mapping for fields with different names
+            deepcopy - should we deepcopy all attributes? [default: True]
         """
         return self.__mapper._map_common(
             obj,
@@ -78,13 +80,14 @@ class MappingWrapper(Generic[T]):
             set(),
             skip_none_values=skip_none_values,
             fields_mapping=fields_mapping,
+            deepcopy=deepcopy,
         )
 
 
 class Mapper:
     def __init__(self) -> None:
         """Initializes internal containers"""
-        self._mappings: Dict[Type[S], Tuple[T, FieldsMap]] = {}  # type: ignore [valid-type]
+        self._mappings: Dict[Type[S], Tuple[T, FieldsMap, bool]] = {}  # type: ignore [valid-type]
         self._class_specs: Dict[Type[T], SpecFunction[T]] = {}  # type: ignore [valid-type]
         self._classifier_specs: Dict[  # type: ignore [valid-type]
             ClassifierFunction[T], SpecFunction[T]
@@ -102,9 +105,7 @@ class Mapper:
         ...
 
     @overload
-    def add_spec(
-        self, classifier: ClassifierFunction[T], spec_func: SpecFunction[T]
-    ) -> None:
+    def add_spec(self, classifier: ClassifierFunction[T], spec_func: SpecFunction[T]) -> None:
         """Add a spec function for all classes identified by classifier function.
 
         Parameters:
@@ -141,6 +142,7 @@ class Mapper:
         target_cls: Type[T],
         override: bool = False,
         fields_mapping: FieldsMap = None,
+        deepcopy: bool = True,
     ) -> None:
         """Adds mapping between object of `source class` to an object of `target class`.
 
@@ -152,12 +154,14 @@ class Mapper:
             Target class to map to
         override : bool, optional
             Override existing `source class` mapping to use new `target class`
+        deepcopy : bool, optional
+            Should we deepcopy all attributes? [default: True]
         """
         if source_cls in self._mappings and not override:
             raise DuplicatedRegistrationError(
                 f"source_cls {source_cls} was already added for mapping"
             )
-        self._mappings[source_cls] = (target_cls, fields_mapping)
+        self._mappings[source_cls] = (target_cls, fields_mapping, deepcopy)
 
     def map(
         self,
@@ -165,6 +169,7 @@ class Mapper:
         *,
         skip_none_values: bool = False,
         fields_mapping: FieldsMap = None,
+        deepcopy: bool = None,
     ) -> T:  # type: ignore [type-var]
         """Produces output object mapped from source object and custom arguments"""
         obj_type = type(obj)
@@ -172,15 +177,14 @@ class Mapper:
             raise MappingError(f"Missing mapping type for input type {obj_type}")
         obj_type_preffix = f"{obj_type.__name__}."
 
-        target_cls, target_cls_field_mappings = self._mappings[obj_type]
+        target_cls, target_cls_field_mappings, target_deepcopy = self._mappings[obj_type]
 
         common_fields_mapping = fields_mapping
         if target_cls_field_mappings:
             # transform mapping if it's from source class field
             common_fields_mapping = {
                 target_obj_field: getattr(obj, source_field[len(obj_type_preffix) :])
-                if isinstance(source_field, str)
-                and source_field.startswith(obj_type_preffix)
+                if isinstance(source_field, str) and source_field.startswith(obj_type_preffix)
                 else source_field
                 for target_obj_field, source_field in target_cls_field_mappings.items()
             }
@@ -190,12 +194,17 @@ class Mapper:
                     **fields_mapping,
                 }  # merge two dict into one, fields_mapping has priority
 
+        # If deepcopy is not explicitly given, we use target_deepcopy
+        if deepcopy is None:
+            deepcopy = target_deepcopy
+
         return self._map_common(
             obj,
             target_cls,
             set(),
             skip_none_values=skip_none_values,
             fields_mapping=common_fields_mapping,
+            deepcopy=deepcopy,
         )
 
     def _get_fields(self, target_cls: Type[T]) -> Iterable[str]:
@@ -208,9 +217,7 @@ class Mapper:
             if classifier(target_cls):
                 return self._classifier_specs[classifier](target_cls)
 
-        raise MappingError(
-            f"No spec function is added for base class of {type(target_cls)}"
-        )
+        raise MappingError(f"No spec function is added for base class of {type(target_cls)}")
 
     def _map_subobject(
         self, obj: S, _visited_stack: Set[int], skip_none_values: bool = False
@@ -224,7 +231,7 @@ class Mapper:
             raise CircularReferenceError()
 
         if type(obj) in self._mappings:
-            target_cls, _ = self._mappings[type(obj)]
+            target_cls, _, _ = self._mappings[type(obj)]
             result: Any = self._map_common(
                 obj, target_cls, _visited_stack, skip_none_values=skip_none_values
             )
@@ -234,9 +241,7 @@ class Mapper:
             if is_sequence(obj):
                 if isinstance(obj, dict):
                     result = {
-                        k: self._map_subobject(
-                            v, _visited_stack, skip_none_values=skip_none_values
-                        )
+                        k: self._map_subobject(v, _visited_stack, skip_none_values=skip_none_values)
                         for k, v in obj.items()
                     }
                 else:
@@ -262,12 +267,14 @@ class Mapper:
         _visited_stack: Set[int],
         skip_none_values: bool = False,
         fields_mapping: FieldsMap = None,
+        deepcopy: bool = True,
     ) -> T:
         """Produces output object mapped from source object and custom arguments
 
         Parameters:
             skip_none_values - do not map fields that has None value
             fields_mapping - fields mappings for fields with different names
+            deepcopy - Should we deepcopy all attributes? [default: True]
         """
         obj_id = id(obj)
 
@@ -293,9 +300,14 @@ class Mapper:
                     value = obj[field_name]  # type: ignore [index]
 
                 if value is not None:
-                    mapped_values[field_name] = self._map_subobject(
-                        value, _visited_stack, skip_none_values
-                    )
+                    if deepcopy:
+                        mapped_values[field_name] = self._map_subobject(
+                            value, _visited_stack, skip_none_values
+                        )
+                    else:
+                        # if deepcopy is disabled, we can act as if value was a primitive type and
+                        # avoid the ._map_subobject() call entirely.
+                        mapped_values[field_name] = value
                 elif not skip_none_values:
                     mapped_values[field_name] = None
 
