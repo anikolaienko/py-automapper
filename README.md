@@ -21,7 +21,8 @@ The MIT License (MIT)
 https://pypi.python.org/pypi/py-automapper
 
 **Build Status**
-TODO
+[![Main branch status](https://github.com/anikolaienko/py-automapper/actions/workflows/run_code_checks.yml/badge.svg?branch=main)](https://github.com/anikolaienko/py-automapper/actions?query=branch%3Amain)
+
 
 ---
 
