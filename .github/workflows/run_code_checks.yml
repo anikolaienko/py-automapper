@@ -28,4 +28,4 @@ jobs:
         run: poetry install
 
       - name: Run code quality tools
-        run: pre-commit run --all-files
+        run: poetry run pre-commit run --all-files
