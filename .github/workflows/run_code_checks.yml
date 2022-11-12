@@ -1,0 +1,28 @@
+name: Run code checks
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  pre-commit-run-all-files:
+    name: Run code checks
+    runs-on: ubuntu-20.04
+    env:
+      PYTHON_VERSION: 3.8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2.2.1
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install tools
+        run: pip install -r dev-requirements.txt
+
+      - name: Run code quality tools
+        run: pre-commit run --all-files
