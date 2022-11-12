@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - 'releases/**'
 
 jobs:
   pre-commit-run-all-files:
@@ -29,3 +30,6 @@ jobs:
 
       - name: Run code quality tools
         run: poetry run pre-commit run --all-files
+
+      - name: Run unit tests
+        run: poetry run pytest tests/
