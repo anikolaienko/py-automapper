@@ -2,8 +2,8 @@ name: Run code checks
 
 on:
   pull_request:
-    types:
-      - opened
+    branches:
+      - main
 
 jobs:
   pre-commit-run-all-files:
