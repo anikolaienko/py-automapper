@@ -3,7 +3,7 @@ name: Run code checks
 on:
   pull_request:
     branches:
-      - master
+      - *
 
 jobs:
   pre-commit-run-all-files:
