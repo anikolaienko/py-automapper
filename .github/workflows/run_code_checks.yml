@@ -1,6 +1,9 @@
 name: Run code checks
 
 on:
+  push:
+    branches: [main]
+    tags:
   pull_request:
     branches:
       - main
