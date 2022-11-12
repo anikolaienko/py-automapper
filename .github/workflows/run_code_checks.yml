@@ -24,5 +24,8 @@ jobs:
       - name: Install tools
         run: pip install -r dev-requirements.txt
 
+      - name: Poetry install
+        run: poetry install
+
       - name: Run code quality tools
         run: pre-commit run --all-files
