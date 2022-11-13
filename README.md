@@ -13,6 +13,9 @@ Table of Contents:
 - [About](#about)
 - [Contribute](#contribute)
 - [Usage](#usage)
+  - [Installation](#installation)
+  - [Get started](#get-started)
+  - [Map dictionary source to target object](#map-dictionary-source-to-target-object)
   - [Different field names](#different-field-names)
   - [Overwrite field value in mapping](#overwrite-field-value-in-mapping)
   - [Disable Deepcopy](#disable-deepcopy)
@@ -37,25 +40,27 @@ The major advantage of py-automapper is its extensibility, that allows it to map
 Read [CONTRIBUTING.md](/CONTRIBUTING.md) guide.
 
 # Usage
+## Installation
 Install package:
 ```bash
 pip install py-automapper
 ```
 
-Let's say we have domain model `UserInfo` and its API representation `PublicUserInfo` with `age` field missing:
+## Get started
+Let's say we have domain model `UserInfo` and its API representation `PublicUserInfo` without exposing user `age`:
 ```python
 class UserInfo:
-    def __init__(self, name: str, age: int, profession: str):
+    def __init__(self, name: str, profession: str, age: int):
         self.name = name
-        self.age = age
         self.profession = profession
+        self.age = age
 
 class PublicUserInfo:
     def __init__(self, name: str, profession: str):
         self.name = name
         self.profession = profession
 
-user_info = UserInfo("John Malkovich", 35, "engineer")
+user_info = UserInfo("John Malkovich", "engineer", 35)
 ```
 To create `PublicUserInfo` object:
 ```python
@@ -75,6 +80,19 @@ public_user_info = mapper.map(user_info)
 
 print(vars(public_user_info))
 # {'name': 'John Malkovich', 'profession': 'engineer'}
+```
+
+## Map dictionary source to target object
+If source object is dictionary:
+```python
+source = {
+    "name": "John Carter",
+    "profession": "hero"
+}
+public_info = mapper.to(PublicUserInfo).map(source)
+
+print(vars(public_info))
+# {'name': 'John Carter', 'profession': 'hero'}
 ```
 
 ## Different field names

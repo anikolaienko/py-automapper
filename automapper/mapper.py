@@ -38,13 +38,29 @@ def _is_sequence(obj: Any) -> bool:
 
 
 def _is_subscriptable(obj: Any) -> bool:
-    """Check if object implements `__get_item__` method"""
-    return hasattr(obj, "__get_item__")
+    """Check if object implements `__getitem__` method"""
+    return hasattr(obj, "__getitem__")
+
+
+def _object_contains(obj: Any, field_name: str) -> bool:
+    return _is_subscriptable(obj) and field_name in obj
 
 
 def _is_primitive(obj: Any) -> bool:
     """Check if object type is primitive"""
     return type(obj) in __PRIMITIVE_TYPES
+
+
+def _try_get_field_value(
+    field_name: str, original_obj: Any, custom_mapping: FieldsMap
+) -> Tuple[bool, Any]:
+    if field_name in (custom_mapping or {}):
+        return True, custom_mapping[field_name]  # type: ignore [index]
+    if hasattr(original_obj, field_name):
+        return True, getattr(original_obj, field_name)
+    if _object_contains(original_obj, field_name):
+        return True, original_obj[field_name]
+    return False, None
 
 
 class MappingWrapper(Generic[T]):
@@ -88,7 +104,7 @@ class MappingWrapper(Generic[T]):
             self.__target_cls,
             set(),
             skip_none_values=skip_none_values,
-            fields_mapping=fields_mapping,
+            custom_mapping=fields_mapping,
             use_deepcopy=use_deepcopy,
         )
 
@@ -203,7 +219,7 @@ class Mapper:
         obj_type = type(obj)
         if obj_type not in self._mappings:
             raise MappingError(f"Missing mapping type for input type {obj_type}")
-        obj_type_preffix = f"{obj_type.__name__}."
+        obj_type_prefix = f"{obj_type.__name__}."
 
         target_cls, target_cls_field_mappings = self._mappings[obj_type]
 
@@ -211,9 +227,9 @@ class Mapper:
         if target_cls_field_mappings:
             # transform mapping if it's from source class field
             common_fields_mapping = {
-                target_obj_field: getattr(obj, source_field[len(obj_type_preffix) :])
+                target_obj_field: getattr(obj, source_field[len(obj_type_prefix) :])
                 if isinstance(source_field, str)
-                and source_field.startswith(obj_type_preffix)
+                and source_field.startswith(obj_type_prefix)
                 else source_field
                 for target_obj_field, source_field in target_cls_field_mappings.items()
             }
@@ -228,7 +244,7 @@ class Mapper:
             target_cls,
             set(),
             skip_none_values=skip_none_values,
-            fields_mapping=common_fields_mapping,
+            custom_mapping=common_fields_mapping,
             use_deepcopy=use_deepcopy,
         )
 
@@ -296,7 +312,7 @@ class Mapper:
         target_cls: Type[T],
         _visited_stack: Set[int],
         skip_none_values: bool = False,
-        fields_mapping: FieldsMap = None,
+        custom_mapping: FieldsMap = None,
         use_deepcopy: bool = True,
     ) -> T:
         """Produces output object mapped from source object and custom arguments.
@@ -306,7 +322,7 @@ class Mapper:
             target_cls (Type[T]): Target class to map to.
             _visited_stack (Set[int]): Visited child objects. To avoid infinite recursive calls.
             skip_none_values (bool, optional): Skip None values when creating `target class` obj. Defaults to False.
-            fields_mapping (FieldsMap, optional): Custom mapping.
+            custom_mapping (FieldsMap, optional): Custom mapping.
                 Specify dictionary in format {"field_name": value_object}. Defaults to None.
             use_deepcopy (bool, optional): Apply deepcopy to all child objects when copy from source to target object.
                 Defaults to True.
@@ -326,29 +342,20 @@ class Mapper:
         target_cls_fields = self._get_fields(target_cls)
 
         mapped_values: Dict[str, Any] = {}
-        is_obj_subscriptable = _is_subscriptable(obj)
         for field_name in target_cls_fields:
-            if (
-                (fields_mapping and field_name in fields_mapping)
-                or hasattr(obj, field_name)
-                or (is_obj_subscriptable and field_name in obj)  # type: ignore [operator]
-            ):
-                if fields_mapping and field_name in fields_mapping:
-                    value = fields_mapping[field_name]
-                elif hasattr(obj, field_name):
-                    value = getattr(obj, field_name)
-                else:
-                    value = obj[field_name]  # type: ignore [index]
+            value_found, value = _try_get_field_value(field_name, obj, custom_mapping)
+            if not value_found:
+                continue
 
-                if value is not None:
-                    if use_deepcopy:
-                        mapped_values[field_name] = self._map_subobject(
-                            value, _visited_stack, skip_none_values
-                        )
-                    else:  # if use_deepcopy is False, simply assign value to target obj.
-                        mapped_values[field_name] = value
-                elif not skip_none_values:
-                    mapped_values[field_name] = None
+            if value is not None:
+                if use_deepcopy:
+                    mapped_values[field_name] = self._map_subobject(
+                        value, _visited_stack, skip_none_values
+                    )
+                else:  # if use_deepcopy is False, simply assign value to target obj.
+                    mapped_values[field_name] = value
+            elif not skip_none_values:
+                mapped_values[field_name] = None
 
         _visited_stack.remove(obj_id)
 
