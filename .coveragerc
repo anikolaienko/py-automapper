@@ -1,0 +1,12 @@
+[run]
+branch = True
+omit =
+    */__init__.py
+    tests/*
+
+[report]
+show_missing = True
+fail_under = 94
+
+[html]
+directory = docs/coverage
