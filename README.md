@@ -14,7 +14,7 @@ Table of Contents:
 - [Contribute](#contribute)
 - [Usage](#usage)
   - [Installation](#installation)
-  - [Basic](#basic)
+  - [Get started](#get-started)
   - [Map dictionary source to target object](#map-dictionary-source-to-target-object)
   - [Different field names](#different-field-names)
   - [Overwrite field value in mapping](#overwrite-field-value-in-mapping)
@@ -46,7 +46,7 @@ Install package:
 pip install py-automapper
 ```
 
-## Basic
+## Get started
 Let's say we have domain model `UserInfo` and its API representation `PublicUserInfo` without exposing user `age`:
 ```python
 class UserInfo:
