@@ -4,7 +4,9 @@
         "hasattr",
         "isclass",
         "multimap",
-        "pyautomapper"
+        "pyautomapper",
+        "subobject",
+        "subobjects"
     ],
     "python.testing.pytestArgs": [],
     "python.testing.unittestEnabled": false,
