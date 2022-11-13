@@ -1,3 +1,7 @@
+1.2.1 - 2022/11/13
+* Fixed dictionary source mapping to target object.
+* Implemented CI checks
+
 1.2.0 - 2022/10/25
 * [g-pichler] Ability to disable deepcopy on mapping: `use_deepcopy` flag in `map` method.
 * [g-pichler] Improved error text when no spec function exists for `target class`.
