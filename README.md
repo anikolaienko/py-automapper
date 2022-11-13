@@ -1,6 +1,6 @@
 <img src="logo.png" style="width:128px; margin-right: 20px;" />
 
-# py-automapper
+# py-automapper <!-- omit in toc -->
 
 **Build Status**
 [![Main branch status](https://github.com/anikolaienko/py-automapper/actions/workflows/run_code_checks.yml/badge.svg?branch=main)](https://github.com/anikolaienko/py-automapper/actions?query=branch%3Amain)
@@ -8,7 +8,6 @@
 ---
 
 Table of Contents:
-- [py-automapper](#py-automapper)
 - [Versions](#versions)
 - [About](#about)
 - [Contribute](#contribute)
