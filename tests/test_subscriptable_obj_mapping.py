@@ -1,5 +1,6 @@
 from automapper import mapper
 
+
 class PublicUserInfo(object):
     def __init__(self, name: str, profession: str):
         self.name = name
@@ -7,12 +8,8 @@ class PublicUserInfo(object):
 
 
 def test_map__dict_to_object():
-    original = {
-        "name": "John Carter",
-        "age": 35,
-        "profession": "hero"
-    }
-    
+    original = {"name": "John Carter", "age": 35, "profession": "hero"}
+
     public_info = mapper.to(PublicUserInfo).map(original)
 
     assert hasattr(public_info, "name") and public_info.name == "John Carter"
