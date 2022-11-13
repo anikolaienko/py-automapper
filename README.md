@@ -1,28 +1,9 @@
-<img src="logo.png" align="left" style="width:128px; margin-right: 20px;" />
+<img src="logo.png" style="width:128px; margin-right: 20px;" />
 
 # py-automapper
 
-**Version**
-1.2.0
-
-**Author**
-anikolaienko
-
-**Copyright**
-anikolaienko
-
-**License**
-The MIT License (MIT)
-
-**Last updated**
-7 Oct 2022
-
-**Package Download**
-https://pypi.python.org/pypi/py-automapper
-
 **Build Status**
 [![Main branch status](https://github.com/anikolaienko/py-automapper/actions/workflows/run_code_checks.yml/badge.svg?branch=main)](https://github.com/anikolaienko/py-automapper/actions?query=branch%3Amain)
-
 
 ---
 
@@ -30,6 +11,7 @@ Table of Contents:
 - [py-automapper](#py-automapper)
 - [Versions](#versions)
 - [About](#about)
+- [Contribute](#contribute)
 - [Usage](#usage)
   - [Different field names](#different-field-names)
   - [Overwrite field value in mapping](#overwrite-field-value-in-mapping)
@@ -50,6 +32,9 @@ Check [CHANGELOG.md](/CHANGELOG.md)
 Inspired by: [object-mapper](https://github.com/marazt/object-mapper)
 
 The major advantage of py-automapper is its extensibility, that allows it to map practically any type, discover custom class fields and customize mapping rules. Read more in [documentation](https://anikolaienko.github.io/py-automapper).
+
+# Contribute
+Read [CONTRIBUTING.md](/CONTRIBUTING.md) guide.
 
 # Usage
 Install package:
