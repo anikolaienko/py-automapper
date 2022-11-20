@@ -1,5 +1,6 @@
 import inspect
 from copy import deepcopy
+from enum import Enum
 from typing import (
     Any,
     Callable,
@@ -49,6 +50,11 @@ def _object_contains(obj: Any, field_name: str) -> bool:
 def _is_primitive(obj: Any) -> bool:
     """Check if object type is primitive"""
     return type(obj) in __PRIMITIVE_TYPES
+
+
+def _is_enum(obj: Any) -> bool:
+    """Check if object type is enum"""
+    return issubclass(type(obj), Enum)
 
 
 def _try_get_field_value(
@@ -267,7 +273,7 @@ class Mapper:
         self, obj: S, _visited_stack: Set[int], skip_none_values: bool = False
     ) -> Any:
         """Maps subobjects recursively"""
-        if _is_primitive(obj):
+        if _is_primitive(obj) or _is_enum(obj):
             return obj
 
         obj_id = id(obj)
