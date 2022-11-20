@@ -1,5 +1,4 @@
-from enum import Enum
-from typing import Tuple
+from enum import Enum, IntEnum
 
 from automapper import mapper
 
@@ -10,13 +9,13 @@ class StringEnum(str, Enum):
     Value3 = "value3"
 
 
-class IntEnum(int, Enum):
+class IntValueEnum(IntEnum):
     Value1 = 1
     Value2 = 2
     Value3 = 3
 
 
-class TupleEnum(Tuple[str, str], Enum):
+class TupleEnum(Enum):
     Value1 = ("value", "1")
     Value2 = ("value", "2")
     Value3 = ("value", "3")
@@ -24,7 +23,7 @@ class TupleEnum(Tuple[str, str], Enum):
 
 class SourceClass:
     def __init__(
-        self, string_value: StringEnum, int_value: IntEnum, tuple_value: TupleEnum
+        self, string_value: StringEnum, int_value: IntValueEnum, tuple_value: TupleEnum
     ) -> None:
         self.string_value = string_value
         self.int_value = int_value
@@ -33,7 +32,7 @@ class SourceClass:
 
 class TargetClass:
     def __init__(
-        self, string_value: StringEnum, int_value: IntEnum, tuple_value: TupleEnum
+        self, string_value: StringEnum, int_value: IntValueEnum, tuple_value: TupleEnum
     ) -> None:
         self.string_value = string_value
         self.int_value = int_value
@@ -41,9 +40,9 @@ class TargetClass:
 
 
 def test_map__enum():
-    src = SourceClass(StringEnum.Value1, IntEnum.Value2, TupleEnum.Value3)
+    src = SourceClass(StringEnum.Value1, IntValueEnum.Value2, TupleEnum.Value3)
     dst = mapper.to(TargetClass).map(src)
 
     assert dst.string_value == StringEnum.Value1
-    assert dst.int_value == IntEnum.Value2
+    assert dst.int_value == IntValueEnum.Value2
     assert dst.tuple_value == TupleEnum.Value3
