@@ -1,3 +1,6 @@
+1.2.2 - 2022/11/20
+* [soldag] Fixed mapping of string enum types (#17)
+
 1.2.1 - 2022/11/13
 * Fixed dictionary source mapping to target object.
 * Implemented CI checks

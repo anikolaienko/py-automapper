@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "py-automapper"
-version = "1.2.1"
+version = "1.2.2"
 description = "Library for automatically mapping one object to another"
 authors = ["Andrii Nikolaienko <anikolaienko14@gmail.com>"]
 license = "MIT"
