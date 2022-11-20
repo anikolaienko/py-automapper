@@ -1,3 +1,6 @@
+1.2.3 - 2022/11/21
+* Added automated code checks for different Python versions.
+
 1.2.2 - 2022/11/20
 * [@soldag] Fixed mapping of string enum types [#17](https://github.com/anikolaienko/py-automapper/pull/17)
 
