@@ -2,6 +2,12 @@
 
 # py-automapper <!-- omit in toc -->
 
+> [!IMPORTANT]
+> Renewing maintanance of this library!
+>
+> After a long pause, I see the library is still in use and receives more stars. Thank you all who likes and uses it. So, I renew the py-automapper maintanance.
+> Expect fixes and new version soon.
+
 **Build Status**
 [![Main branch status](https://github.com/anikolaienko/py-automapper/actions/workflows/run_code_checks.yml/badge.svg?branch=main)](https://github.com/anikolaienko/py-automapper/actions?query=branch%3Amain)
 
