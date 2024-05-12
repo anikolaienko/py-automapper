@@ -102,11 +102,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
-.venv
-env/
-venv/
-ENV/
+.venv*
 env.bak/
 venv.bak/
 
@@ -130,3 +126,6 @@ dmypy.json
 
 # Coming in future, but not yet
 sphinx-docs/
+
+# VS Code IDE
+.vscode
