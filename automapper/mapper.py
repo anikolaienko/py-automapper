@@ -233,10 +233,12 @@ class Mapper:
         if target_cls_field_mappings:
             # transform mapping if it's from source class field
             common_fields_mapping = {
-                target_obj_field: getattr(obj, source_field[len(obj_type_prefix) :])
-                if isinstance(source_field, str)
-                and source_field.startswith(obj_type_prefix)
-                else source_field
+                target_obj_field: (
+                    getattr(obj, source_field[len(obj_type_prefix) :])
+                    if isinstance(source_field, str)
+                    and source_field.startswith(obj_type_prefix)
+                    else source_field
+                )
                 for target_obj_field, source_field in target_cls_field_mappings.items()
             }
             if fields_mapping:

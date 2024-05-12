@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "py-automapper"
-version = "1.2.3"
+version = "2.0.0"
 description = "Library for automatically mapping one object to another"
 authors = [
   {name = "Andrii Nikolaienko", email = "anikolaienko14@gmail.com"}
@@ -43,7 +43,7 @@ Changelog = "https://github.com/anikolaienko/py-automapper/blob/main/CHANGELOG.m
 dev = [
     "tortoise-orm~=0.20.1",
     "pydantic~=2.7.1",
-    "SQLAlchemy[mypy]~=2.0.30",
+    "SQLAlchemy~=2.0.30",
     "twine~=5.0.0",
     "Sphinx~=7.1.2"
 ]
