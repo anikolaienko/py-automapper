@@ -4,9 +4,11 @@ import pytest
 from automapper import Mapper, MappingError
 from automapper import mapper as default_mapper
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class UserInfo(Base):

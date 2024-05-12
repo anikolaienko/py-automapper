@@ -7,13 +7,10 @@ Table of Contents:
 - [Run tests](#run-tests)
 
 # Dev environment
-* Install prerequisites from `dev-requirements.txt`:
+* Install all dependencies:
 ```bash
-pip install -r dev-requirements.txt
-```
-* Install `py-automapper` dependencies with poetry:
-```bash
-poetry install
+pip install .[dev]
+pip install .[test]
 ```
 
 # Pre-commit
@@ -23,18 +20,19 @@ pre-commit install
 ```
 After this code checks will run on `git commit` command.
 
-If some of the `pre-commit` dependencies are not found make sure to activate appropriate poetry virtualenv. To check path to virtual environment run:
-```bash
-poetry env info -p
-```
+If some of the `pre-commit` dependencies are not found make sure to activate appropriate virtual environment
 
-Or run pre-commit manually:
-```
-poetry run pre-commit run --all-files
+To run `pre-commit` manually use:
+```bash
+pre-commit run --all-files
 ```
 
 # Run tests
 To run unit tests use command:
+```bash
+make test
 ```
-poetry run pytest tests/
+or simply
+```bash
+pytest
 ```

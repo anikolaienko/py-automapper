@@ -1,3 +1,10 @@
+
+2.0.0 - 2024/05/12
+* Moved away from poetry. Changed packaging system using pip, build and twine.
+* Upgraded all dependencies.
+* Add support for Python 3.12.
+* Migrated SQLAlchemy from 1.x to 2.x.
+
 1.2.3 - 2022/11/21
 * Added automated code checks for different Python versions.
 
