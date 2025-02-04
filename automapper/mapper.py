@@ -1,6 +1,5 @@
 import inspect
 from copy import deepcopy
-from enum import Enum
 from typing import (
     Any,
     Callable,
@@ -22,6 +21,7 @@ from .exceptions import (
     DuplicatedRegistrationError,
     MappingError,
 )
+from .utils import is_enum, is_primitive, is_sequence, object_contains
 
 # Custom Types
 S = TypeVar("S")
@@ -29,32 +29,6 @@ T = TypeVar("T")
 ClassifierFunction = Callable[[Type[T]], bool]
 SpecFunction = Callable[[Type[T]], Iterable[str]]
 FieldsMap = Optional[Dict[str, Any]]
-
-__PRIMITIVE_TYPES = {int, float, complex, str, bytes, bytearray, bool}
-
-
-def _is_sequence(obj: Any) -> bool:
-    """Check if object implements `__iter__` method"""
-    return hasattr(obj, "__iter__")
-
-
-def _is_subscriptable(obj: Any) -> bool:
-    """Check if object implements `__getitem__` method"""
-    return hasattr(obj, "__getitem__")
-
-
-def _object_contains(obj: Any, field_name: str) -> bool:
-    return _is_subscriptable(obj) and field_name in obj
-
-
-def _is_primitive(obj: Any) -> bool:
-    """Check if object type is primitive"""
-    return type(obj) in __PRIMITIVE_TYPES
-
-
-def _is_enum(obj: Any) -> bool:
-    """Check if object type is enum"""
-    return issubclass(type(obj), Enum)
 
 
 def _try_get_field_value(
@@ -64,7 +38,7 @@ def _try_get_field_value(
         return True, custom_mapping[field_name]  # type: ignore [index]
     if hasattr(original_obj, field_name):
         return True, getattr(original_obj, field_name)
-    if _object_contains(original_obj, field_name):
+    if object_contains(original_obj, field_name):
         return True, original_obj[field_name]
     return False, None
 
@@ -275,7 +249,7 @@ class Mapper:
         self, obj: S, _visited_stack: Set[int], skip_none_values: bool = False
     ) -> Any:
         """Maps subobjects recursively"""
-        if _is_primitive(obj) or _is_enum(obj):
+        if is_primitive(obj) or is_enum(obj):
             return obj
 
         obj_id = id(obj)
@@ -290,7 +264,7 @@ class Mapper:
         else:
             _visited_stack.add(obj_id)
 
-            if _is_sequence(obj):
+            if is_sequence(obj):
                 if isinstance(obj, dict):
                     result = {
                         k: self._map_subobject(

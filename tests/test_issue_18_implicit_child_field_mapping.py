@@ -12,13 +12,13 @@ class UserDomain:
 
 
 @dataclass
-class TodoDomain:
+class InputDomain:
     description: str
     user: UserDomain
 
 
 @dataclass
-class TodoModel:
+class OutputModel:
     description: str
     user: UserDomain
     user_id: Optional[int] = None
@@ -26,16 +26,18 @@ class TodoModel:
 
 def test_map__implicit_mapping_of_child_obj_field_to_parent_obj_field_not_supported():
     user = UserDomain(id=123, name="carlo", email="mail_carlo")
-    todo = TodoDomain(description="todo_carlo", user=user)
+    domain = InputDomain(description="todo_carlo", user=user)
 
-    mapper.add(TodoDomain, TodoModel)
-    todo_model: TodoModel = mapper.map(todo)
+    mapper.add(InputDomain, OutputModel)
+    model_with_none_user_id: OutputModel = mapper.map(domain)
 
     # Implicit field mapping between parent and child objects is not supported
-    # TodoDomain.user.user_id should not map to TodoModel.user_id implicitly
-    assert todo_model.user_id is None
+    # InputDomain.user.user_id should not map to OutputModel.user_id implicitly
+    assert model_with_none_user_id.user_id is None
 
     # Workaround: use explicit mapping
-    todo_model1: TodoModel = mapper.map(todo, fields_mapping={"user_id": todo.user.id})
+    todo_model_complete: OutputModel = mapper.map(
+        domain, fields_mapping={"user_id": domain.user.id}
+    )
 
-    assert todo_model1.user_id == 123
+    assert todo_model_complete.user_id == 123
