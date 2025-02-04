@@ -1,0 +1,12 @@
+[flake8]
+max-line-length = 120
+per-file-ignores =
+    **/__init__.py:F401,F403
+ignore =
+    ; E203 whitespace before ':'
+    E203
+    ; W503 line break before binary operator
+    W503
+    ; E704 multiple statements on one line
+    E704
+count = True

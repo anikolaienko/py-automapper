@@ -41,8 +41,7 @@ class ClassWithoutInitAttrDef:
 
 
 class ClassWithFieldsMethodProtocol(Protocol):
-    def fields(self) -> Iterable[str]:
-        ...
+    def fields(self) -> Iterable[str]: ...
 
 
 def custom_spec_func(concrete_class: Type[T]) -> Iterable[str]:

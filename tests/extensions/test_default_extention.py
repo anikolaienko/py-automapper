@@ -19,8 +19,7 @@ class ClassWithoutInitAttrDef:
 
 @runtime_checkable
 class ClassWithFieldsMethodProtocol(Protocol):
-    def fields(self) -> Iterable[str]:
-        ...
+    def fields(self) -> Iterable[str]: ...
 
 
 def classifier_func(target_cls: Type[T]) -> bool:

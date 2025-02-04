@@ -3,26 +3,8 @@
 files: ".py$"
 exclude: "sphinx-docs/"
 repos:
-  - repo: https://github.com/psf/black
-    rev: 22.10.0
-    hooks:
-      - id: black
-        name: black
-        description: "Black: The uncompromising Python code formatter"
-        entry: black
-        language: python
-        require_serial: true
-        types_or: [python, pyi]
-        args: [--config=code-checks/.black.cfg]
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
-    hooks:
-      - id: isort
-        name: Run isort to sort imports in Python files
-        files: \.py$|\.pyi$
-        args: [--settings-path=code-checks/.isort.cfg]
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.6.0
     hooks:
       - id: check-merge-conflict
         name: Check that merge conflicts are not being committed
@@ -32,8 +14,26 @@ repos:
         name: Detect if mixed line ending is used (\r vs. \r\n)
       - id: end-of-file-fixer
         name: Make sure that there is an empty line at the end
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        name: black
+        description: "Black: The uncompromising Python code formatter"
+        entry: black
+        language: python
+        require_serial: true
+        types_or: [python, pyi]
+        args: [--config=.code_quality/.black.cfg]
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: Run isort to sort imports in Python files
+        files: \.py$|\.pyi$
+        args: [--settings-path=.code_quality/.isort.cfg]
   - repo: https://github.com/PyCQA/flake8
-    rev: 5.0.4
+    rev: 7.0.0
     hooks:
       - id: flake8
         name: flake8
@@ -42,14 +42,14 @@ repos:
         language: python
         types: [python]
         require_serial: true
-        args: [--config=code-checks/.flake8]
+        args: [--config=.code_quality/.flake8]
   - repo: local
     hooks:
       - id: mypy
         name: mypy
-        description: 'Optional static typing for Python (installed by Poetry)'
+        description: 'Optional static typing for Python (installed as [test] dependency)'
         entry: mypy
         language: python
         require_serial: true
         types_or: [python, pyi]
-        args: [--config-file=code-checks/.mypy.ini]
+        args: [--config-file=.code_quality/.mypy.ini]
