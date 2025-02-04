@@ -5,6 +5,7 @@ from .exceptions import (
     MappingError,
 )
 from .mapper import Mapper
+from .mapping_path import MappingPath
 from .mapper_initializer import create_mapper
 
 # Global mapper
