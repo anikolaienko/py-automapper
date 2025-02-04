@@ -1,3 +1,4 @@
+import collections
 from enum import Enum
 from typing import Any
 
@@ -6,7 +7,7 @@ __PRIMITIVE_TYPES = {int, float, complex, str, bytes, bytearray, bool}
 
 def is_sequence(obj: Any) -> bool:
     """Check if object implements `__iter__` method"""
-    return hasattr(obj, "__iter__")
+    return isinstance(obj, collections.Sequence)
 
 
 def is_subscriptable(obj: Any) -> bool:
