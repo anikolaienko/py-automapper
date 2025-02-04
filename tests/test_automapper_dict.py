@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from dataclasses import dataclass
+from typing import Dict
 
 from automapper import mapper
 
@@ -10,7 +11,7 @@ class Teacher:
 
 
 class Student:
-    def __init__(self, name: str, classes: dict[str, Teacher]):
+    def __init__(self, name: str, classes: Dict[str, Teacher]):
         self.name = name
         self.classes = classes
         self.ordered_classes = OrderedDict(classes)
@@ -20,8 +21,8 @@ class PublicUserInfo:
     def __init__(
         self,
         name: str,
-        classes: dict[str, Teacher],
-        ordered_classes: dict[str, Teacher],
+        classes: Dict[str, Teacher],
+        ordered_classes: Dict[str, Teacher],
     ):
         self.name = name
         self.classes = classes
@@ -38,7 +39,7 @@ def test_map__dict_and_ordereddict_are_mapped_correctly_to_same_types():
 
     assert public_info.classes == student.classes
     assert public_info.classes is not student.classes
-    assert isinstance(public_info.classes, dict)
+    assert isinstance(public_info.classes, Dict)
 
     assert public_info.ordered_classes == student.ordered_classes
     assert public_info.ordered_classes is not student.ordered_classes
