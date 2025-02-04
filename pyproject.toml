@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "py-automapper"
-version = "2.0.0"
+version = "2.1.0"
 description = "Library for automatically mapping one object to another"
 authors = [
   {name = "Andrii Nikolaienko", email = "anikolaienko14@gmail.com"}
