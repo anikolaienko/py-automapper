@@ -1,4 +1,10 @@
-import collections
+import sys
+
+if sys.version_info >= (3, 10):
+    from collections.abc import Sequence
+else:
+    from collections import Sequence
+
 from enum import Enum
 from typing import Any
 
@@ -7,7 +13,12 @@ __PRIMITIVE_TYPES = {int, float, complex, str, bytes, bytearray, bool}
 
 def is_sequence(obj: Any) -> bool:
     """Check if object implements `__iter__` method"""
-    return isinstance(obj, collections.Sequence)
+    return isinstance(obj, Sequence)
+
+
+def is_dictionary(obj: Any) -> bool:
+    """Check is object is of type dictionary"""
+    return isinstance(obj, dict)
 
 
 def is_subscriptable(obj: Any) -> bool:

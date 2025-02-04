@@ -21,7 +21,7 @@ from .exceptions import (
     DuplicatedRegistrationError,
     MappingError,
 )
-from .utils import is_enum, is_primitive, is_sequence, object_contains
+from .utils import is_dictionary, is_enum, is_primitive, is_sequence, object_contains
 
 # Custom Types
 S = TypeVar("S")
@@ -264,23 +264,24 @@ class Mapper:
         else:
             _visited_stack.add(obj_id)
 
-            if is_sequence(obj):
-                if isinstance(obj, dict):
-                    result = {
+            if is_dictionary(obj):
+                result = type(obj)(  # type: ignore [call-arg]
+                    {
                         k: self._map_subobject(
                             v, _visited_stack, skip_none_values=skip_none_values
                         )
-                        for k, v in obj.items()
+                        for k, v in obj.items()  # type: ignore [attr-defined]
                     }
-                else:
-                    result = type(obj)(  # type: ignore [call-arg]
-                        [
-                            self._map_subobject(
-                                x, _visited_stack, skip_none_values=skip_none_values
-                            )
-                            for x in cast(Iterable[Any], obj)
-                        ]
-                    )
+                )
+            elif is_sequence(obj):
+                result = type(obj)(  # type: ignore [call-arg]
+                    [
+                        self._map_subobject(
+                            x, _visited_stack, skip_none_values=skip_none_values
+                        )
+                        for x in cast(Iterable[Any], obj)
+                    ]
+                )
             else:
                 result = deepcopy(obj)
 
