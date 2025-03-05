@@ -134,6 +134,42 @@ print(vars(public_user_info))
 # {'full_name': 'John Cusack', 'profession': 'engineer'}
 ```
 
+It is possible to easily specify nested field mappings.
+```python
+class BasicUser:
+    def __init__(self, name: str, city: str):
+        self.name = name
+        self.city = city
+
+class AdvancedUser:
+    def __init__(self, user: BasicUser, job: str, salary: int):
+        self.user = user
+        self.job = job
+        self.salary = salary
+        
+mapper.add(
+    AdvancedUser, BasicUser, fields_mapping={
+        "name": "AdvancedUser.user.name",
+        "city": "AdvancedUser.user.city",
+    }
+)
+
+user = BasicUser(
+    name="John",
+    city="USA"
+)
+advanced_user = AdvancedUser(
+    user = user,
+    job = "Engineer",
+    salary = 100
+)
+
+basic_user = mapper.map(advanced_user)
+print(vars(basic_user))
+# {'name': 'John', 'city': 'USA'}
+```
+
+
 ## Disable Deepcopy
 By default, py-automapper performs a recursive `copy.deepcopy()` call on all attributes when copying from source object into target class instance.
 This makes sure that changes in the attributes of the source do not affect the target and vice versa.

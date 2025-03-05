@@ -1,5 +1,6 @@
 import inspect
 from copy import deepcopy
+from functools import reduce
 from typing import (
     Any,
     Callable,
@@ -208,7 +209,7 @@ class Mapper:
             # transform mapping if it's from source class field
             common_fields_mapping = {
                 target_obj_field: (
-                    getattr(obj, source_field[len(obj_type_prefix) :])
+                    self._rgetter(obj, source_field[len(obj_type_prefix) :])
                     if isinstance(source_field, str)
                     and source_field.startswith(obj_type_prefix)
                     else source_field
@@ -343,6 +344,12 @@ class Mapper:
         _visited_stack.remove(obj_id)
 
         return cast(target_cls, target_cls(**mapped_values))  # type: ignore [valid-type]
+
+    @staticmethod
+    def _rgetter(obj: object, value: Any) -> Any:
+        """Recursively go through chain of references."""
+        attributes = value.split(".")
+        return reduce(lambda o, attr: getattr(o, attr), attributes, obj)
 
     def to(self, target_cls: Type[T]) -> MappingWrapper[T]:
         """Specify `target class` to which map `source class` object.

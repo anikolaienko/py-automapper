@@ -269,7 +269,7 @@ version = "0.19.2"
 description = "Easy async ORM for python, built with relations in mind"
 category = "dev"
 optional = false
-python-versions = ">=3.7,<4.0"
+python-versions = ">=3.8,<4.0"
 
 [package.dependencies]
 aiosqlite = ">=0.16.0,<0.18.0"
