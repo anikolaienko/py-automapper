@@ -22,6 +22,7 @@ from .exceptions import (
     DuplicatedRegistrationError,
     MappingError,
 )
+from .path_mapper import MapPath
 from .utils import is_dictionary, is_enum, is_primitive, is_sequence, object_contains
 
 # Custom Types
@@ -29,7 +30,7 @@ S = TypeVar("S")
 T = TypeVar("T")
 ClassifierFunction = Callable[[Type[T]], bool]
 SpecFunction = Callable[[Type[T]], Iterable[str]]
-FieldsMap = Optional[Dict[str, Any]]
+FieldsMap = Optional[Dict[str | MapPath, Any]]
 
 
 def _try_get_field_value(
@@ -206,21 +207,28 @@ class Mapper:
 
         common_fields_mapping = fields_mapping
         if target_cls_field_mappings:
-            # transform mapping if it's from source class field
-            common_fields_mapping = {
-                target_obj_field: (
-                    self._rgetter(obj, source_field[len(obj_type_prefix) :])
-                    if isinstance(source_field, str)
-                    and source_field.startswith(obj_type_prefix)
-                    else source_field
-                )
-                for target_obj_field, source_field in target_cls_field_mappings.items()
-            }
+            # Transform mapping if it's from source class field
+            common_fields_mapping = {}
+
+            for target_obj_field, source_field in target_cls_field_mappings.items():
+                if isinstance(source_field, str) and source_field.startswith(
+                    obj_type_prefix
+                ):
+                    common_fields_mapping[target_obj_field] = self._rgetter(
+                        obj, source_field[len(obj_type_prefix) :]
+                    )
+                elif isinstance(source_field, MapPath):
+                    common_fields_mapping[target_obj_field] = self._rgetter(
+                        obj, source_field
+                    )
+                else:
+                    common_fields_mapping[target_obj_field] = source_field
+
             if fields_mapping:
-                common_fields_mapping = {
-                    **common_fields_mapping,
-                    **fields_mapping,
-                }  # merge two dict into one, fields_mapping has priority
+                for key, value in fields_mapping.items():
+                    common_fields_mapping[key] = (
+                        value  # Merge, with fields_mapping having priority
+                    )
 
         return self._map_common(
             obj,
@@ -347,9 +355,15 @@ class Mapper:
 
     @staticmethod
     def _rgetter(obj: object, value: Any) -> Any:
-        """Recursively go through chain of references."""
-        attributes = value.split(".")
-        return reduce(lambda o, attr: getattr(o, attr), attributes, obj)
+        """Recursively resolves a value from an object.
+
+        If `value` is an instance of `MapPath`, it traverses the object's attributes recursively.
+        Otherwise, it retrieves the direct attribute from the object.
+        """
+        if isinstance(value, MapPath):
+            return reduce(lambda o, attr: getattr(o, attr), value.attributes, obj)
+
+        return getattr(obj, value)
 
     def to(self, target_cls: Type[T]) -> MappingWrapper[T]:
         """Specify `target class` to which map `source class` object.
