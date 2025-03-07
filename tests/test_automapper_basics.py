@@ -53,11 +53,6 @@ def test_map__field_with_same_name():
     assert public_user_info.profession == "engineer"
 
 
-def test_mapping_of_nested_attributes_without_map_path_should_fail():
-    """It tries to only do reference for the first attribute in the chain which doesnt exists."""
-    ...
-
-
 def test_map__field_with_different_name():
     user_info = UserInfo("John Malkovich", 35, "engineer")
     public_user_info: PublicUserInfoDiff = mapper.to(PublicUserInfoDiff).map(
