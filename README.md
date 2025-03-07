@@ -134,7 +134,12 @@ print(vars(public_user_info))
 # {'full_name': 'John Cusack', 'profession': 'engineer'}
 ```
 
-It is possible to easily specify nested field mappings.
+It is possible to easily specify nested field mappings. It can be done through "MapPath" object for your fields.
+Please be aware that you can´t mix in one mapping string mapping with MapPath mapping. You don´t need to specify source class
+from which mappings comes from as code will automatically use ```__name__``` of your source class.
+
+This is supported only if you register mapping through ```add``` method.
+
 ```python
 class BasicUser:
     def __init__(self, name: str, city: str):
@@ -148,9 +153,11 @@ class AdvancedUser:
         self.salary = salary
         
 mapper.add(
-    AdvancedUser, BasicUser, fields_mapping={
-        "name": "AdvancedUser.user.name",
-        "city": "AdvancedUser.user.city",
+    AdvancedUser,
+    BasicUser,
+    fields_mapping={
+        "name": MapPath("user.name"),
+        "city": MapPath("user.city"),
     }
 )
 

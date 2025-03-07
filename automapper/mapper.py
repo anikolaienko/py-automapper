@@ -1,36 +1,17 @@
 import inspect
 from copy import deepcopy
 from functools import reduce
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Iterable,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-    cast,
-    overload,
-)
+from typing import Any, Dict, Generic, Iterable, Set, Tuple, Type, Union, cast, overload
 
+from .custom_types import ClassifierFunction, FieldsMap, S, SpecFunction, T
 from .exceptions import (
     CircularReferenceError,
     DuplicatedRegistrationError,
+    MapPathMissMatchError,
     MappingError,
 )
 from .path_mapper import MapPath
 from .utils import is_dictionary, is_enum, is_primitive, is_sequence, object_contains
-
-# Custom Types
-S = TypeVar("S")
-T = TypeVar("T")
-ClassifierFunction = Callable[[Type[T]], bool]
-SpecFunction = Callable[[Type[T]], Iterable[str]]
-FieldsMap = Optional[Dict[str | MapPath, Any]]
 
 
 def _try_get_field_value(
@@ -162,14 +143,28 @@ class Mapper:
 
         Raises:
             DuplicatedRegistrationError: Same mapping for `source class` was added.
-            Only one mapping per source class can exist at a time for now.
-            You can specify target class manually using `mapper.to(target_cls)` method
-            or use `override` argument to replace existing mapping.
+                Only one mapping per source class can exist at a time for now.
+                You can specify target class manually using `mapper.to(target_cls)` method
+                or use `override` argument to replace existing mapping.
+            MapPathMissMatchError: When mixing `MapPath` with string mappings for a single mapping.
         """
         if source_cls in self._mappings and not override:
             raise DuplicatedRegistrationError(
                 f"source_cls {source_cls} was already added for mapping"
             )
+
+        if fields_mapping and any(
+            isinstance(map_path, MapPath) for map_path in fields_mapping.values()
+        ):
+            map_paths = fields_mapping.values()
+            if not all(isinstance(map_path, MapPath) for map_path in map_paths):
+                raise MapPathMissMatchError(
+                    "It is not allowed to mix MapPath mappings with string mappings."
+                )
+
+            for map_path in map_paths:
+                map_path.obj_prefix = source_cls.__name__
+
         self._mappings[source_cls] = (target_cls, fields_mapping)
 
     def map(

@@ -1,8 +1,6 @@
 import pytest
-from automapper import mapper
-from automapper.path_mapper import (  # Replace 'your_module' with the actual module name
-    MapPath,
-)
+from automapper import MapPath, mapper
+from automapper.exceptions import MapPathMissMatchError
 
 
 class BasicUser:
@@ -28,8 +26,10 @@ class TestMapPath:
         """Test that MapPath correctly splits a valid path."""
         path = MapPath("some.example.path")
         assert path.path == "some.example.path"
-        assert path.attributes == ["example", "path"]  # obj_prefix is excluded
-        assert path.obj_prefix == "some"  # obj_prefix is correctly assigned
+        assert path.attributes == ["some", "example", "path"]
+        assert (
+            path.obj_prefix is None
+        )  # this is set by automatic in the process of mapping.
 
     def test_invalid_map_path_missing_dot(self):
         """Test that MapPath raises ValueError for paths without a dot."""
@@ -41,25 +41,23 @@ class TestMapPath:
     def test_callable_behavior(self):
         """Test that calling an instance returns the correct split attributes."""
         path = MapPath("one.two.three")
-        assert path() == ["two", "three"]
+        assert path() == ["one", "two", "three"]
 
     def test_repr(self):
         """Test that __repr__ returns the expected string representation."""
         path = MapPath("foo.bar")
-        assert (
-            repr(path) == "MapPath(['bar'])"
-        )  # Only attributes are shown, excluding obj_prefix
+        assert repr(path) == "MapPath(['foo', 'bar'])"
 
 
-class TestMappingObjectAttributes:
+class TestAddMappingWithNestedObjectReference:
     def test_use_registered_mapping_with_map_path(self):
         try:
             mapper.add(
                 AdvancedUser,
                 BasicUser,
                 fields_mapping={
-                    "name": MapPath("AdvancedUser.user.name"),
-                    "city": MapPath("AdvancedUser.user.city"),
+                    "name": MapPath("user.name"),
+                    "city": MapPath("user.city"),
                 },
             )
 
@@ -83,3 +81,15 @@ class TestMappingObjectAttributes:
                 mapper.to(BasicUser).map(advanced_user)
         finally:
             mapper._mappings.clear()
+
+    def test_cant_add_mapping_with_mixed_map_path_and_string_mapping(self):
+        """Cant mix MapPath for one field and another field be classic string mapping."""
+        with pytest.raises(MapPathMissMatchError):
+            mapper.add(
+                AdvancedUser,
+                BasicUser,
+                fields_mapping={
+                    "name": "AdvancedUser.user.name",
+                    "city": MapPath("AdvancedUser.user.city"),
+                },
+            )
