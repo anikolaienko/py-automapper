@@ -6,6 +6,10 @@ class MappingError(Exception):
     pass
 
 
+class MapPathMissMatchError(Exception):
+    pass
+
+
 class CircularReferenceError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(

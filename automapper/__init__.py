@@ -6,6 +6,7 @@ from .exceptions import (
 )
 from .mapper import Mapper
 from .mapper_initializer import create_mapper
+from .path_mapper import MapPath
 
 # Global mapper
 mapper = create_mapper()
