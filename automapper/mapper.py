@@ -220,10 +220,10 @@ class Mapper:
                     common_fields_mapping[target_obj_field] = source_field
 
             if fields_mapping:
-                for key, value in fields_mapping.items():
-                    common_fields_mapping[key] = (
-                        value  # Merge, with fields_mapping having priority
-                    )
+                common_fields_mapping = {
+                    **common_fields_mapping,
+                    **fields_mapping,
+                }  # merge two dict into one, fields_mapping has priority
 
         return self._map_common(
             obj,
