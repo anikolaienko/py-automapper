@@ -1,4 +1,5 @@
 2.2.0 - 2025/03/09
+* Added support for Python 3.13.
 * Added `py.typed` file to support type checking.
 * Removed `poetry.lock` as it's not used for a long time now.
 
