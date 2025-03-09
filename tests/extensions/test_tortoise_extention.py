@@ -1,3 +1,4 @@
+from typing import Any
 from unittest import TestCase
 
 import pytest
@@ -10,13 +11,13 @@ class UserInfo(Model):
     id = fields.IntField(pk=True)
     full_name = fields.TextField()
     public_name = fields.TextField()
-    hobbies = fields.JSONField()
+    hobbies: Any = fields.JSONField()
 
 
 class PublicUserInfo(Model):
     id = fields.IntField(pk=True)
     public_name = fields.TextField()
-    hobbies = fields.JSONField()
+    hobbies: Any = fields.JSONField()
 
 
 class TortoiseORMExtensionTest(TestCase):
