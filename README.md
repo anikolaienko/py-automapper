@@ -220,13 +220,13 @@ from tortoise import Model, fields
 from automapper import mapper
 
 class UserInfo(Model):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     full_name = fields.TextField()
     public_name = fields.TextField()
     hobbies = fields.JSONField()
 
 class PublicUserInfo(Model):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     public_name = fields.TextField()
     hobbies = fields.JSONField()
 
