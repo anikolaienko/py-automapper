@@ -1,5 +1,7 @@
 2.2.0 - 2025/03/09
 * Added support for Python 3.13.
+* Upgrade [dev,test] dependencies.
+* Update Ubuntu CI/CD image to ubuntu-24.04.
 * Added `py.typed` file to support type checking.
 * Removed `poetry.lock` as it's not used for a long time now.
 
