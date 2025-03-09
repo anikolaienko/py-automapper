@@ -13,7 +13,7 @@ class Base(DeclarativeBase):
 
 class UserInfo(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, pk=True)
     full_name = Column(String)
     public_name = Column(String)
     hobbies = Column(String)
@@ -28,7 +28,7 @@ class UserInfo(Base):
 
 class PublicUserInfo(Base):
     __tablename__ = "public_users"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, pk=True)
     public_name = Column(String)
     hobbies = Column(String)
 

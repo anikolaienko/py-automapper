@@ -4,7 +4,7 @@ from automapper.mapper import _try_get_field_value
 
 
 @dataclass
-class TestClass:
+class DummyClass:
     map_field: str
 
 
@@ -17,7 +17,7 @@ def test_try_get_field_value__if_in_custom_mapping():
 
 def test_try_get_field_value__if_origin_has_same_field_attr():
     is_found, mapped_value = _try_get_field_value(
-        "map_field", TestClass("Hello world"), None
+        "map_field", DummyClass("Hello world"), None
     )
 
     assert is_found
