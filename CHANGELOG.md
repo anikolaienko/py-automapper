@@ -1,3 +1,11 @@
+2.2.0 - 2025/03/09
+* Added `py.typed` file to support type checking.
+* Removed `poetry.lock` as it's not used for a long time now.
+
+2.1.0 - 2025/02/04
+* Breaking changes: Modified logic that maps Sequence and Dictionary classes. All tests are green but this can cause some unexpected behaviour and new defects.
+* Fixed issue #25 with deepcopy for SQLAlchemy classes.
+* Improved unit testing.
 
 2.0.0 - 2024/05/12
 * Moved away from poetry. Changed packaging system using pip, build and twine.
