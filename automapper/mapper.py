@@ -334,6 +334,7 @@ class Mapper:
             raise CircularReferenceError()
 
         if type(obj) in self._mappings:
+            # TODO: why do we skip here predefined field map?
             target_cls, _ = self._mappings[type(obj)]
             result: Any = self._map_common(
                 obj, target_cls, _visited_stack, skip_none_values=skip_none_values
