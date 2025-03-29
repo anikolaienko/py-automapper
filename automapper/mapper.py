@@ -221,11 +221,11 @@ class Mapper:
         target_cls, predefined_field_map = self._mappings[source_obj_type]
 
         # TODO: combine and produce 1 field_map
-        new_field_map = conf
+        field_map = {}
         if predefined_field_map:
             # transform mapping if it's from source class field
             obj_type_prefix = f"{source_obj_type.__name__}."
-            new_field_map = {
+            field_map = {
                 target_field: transform_source_field(source_field)
                 # (
                 #     getattr(source_obj, source_field[len(obj_type_prefix) :])
@@ -234,22 +234,23 @@ class Mapper:
                 # )
                 for target_field, source_field in predefined_field_map.items()
             }
-            if fields_mapping:
-                common_fields_mapping = {
-                    **common_fields_mapping,
-                    **fields_mapping,
-                }  # merge two dict into one, fields_mapping has priority
+
+        if conf:
+            field_map = {
+                **field_map,
+                **conf,
+            }  # merge two dict into one, `conf` has priority
 
         return self._map_common(
             source_obj,
             target_cls,
             set(),
-            skip_none_values=skip_none_values,
-            custom_mapping=common_fields_mapping,
-            use_deepcopy=use_deepcopy,
+            skip_none_values=skip_none,
+            custom_mapping=field_map,
+            use_deepcopy=deepcopy,
         )
 
-    def _get_fields(self, target_cls: Type[T]) -> Iterable[str]:
+    def _get_target_fields(self, target_cls: Type[T]) -> Iterable[str]:
         """Retrieved list of fields for initializing target class object"""
         for base_class in self._class_specs:
             if issubclass(target_cls, base_class):
@@ -297,7 +298,7 @@ class Mapper:
             raise CircularReferenceError()
         _visited_stack.add(source_obj_id)
 
-        target_cls_fields = self._get_fields(target_cls)
+        target_cls_fields = self._get_target_fields(target_cls)
 
         mapped_values: Dict[str, Any] = {}
         for field_name in target_cls_fields:
