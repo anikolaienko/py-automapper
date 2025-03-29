@@ -170,13 +170,24 @@ class Mapper:
             )
         self._mappings[source_cls] = (target_cls, fields_mapping)
 
+    def to(self, target_cls: Type[T]) -> MappingWrapper[T]:
+        """Specify `target class` to which map `source class` object.
+
+        Args:
+            target_cls (Type[T]): Target class.
+
+        Returns:
+            MappingWrapper[T]: Mapping wrapper. Use `map` method to perform mapping now.
+        """
+        return MappingWrapper[T](self, target_cls)
+
     def map(
         self,
         obj: object,
         *,
-        skip_none_values: bool = False,
-        fields_mapping: FieldsMap = None,
-        use_deepcopy: bool = True,
+        conf: dict[str, Any] | None = None,
+        skip_none: bool = False,
+        deepcopy: bool = True,
     ) -> T:  # type: ignore [type-var]
         """Produces output object mapped from source object and custom arguments
 
@@ -196,24 +207,32 @@ class Mapper:
         Returns:
             T: instance of `target class` with mapped values from `source class` or custom `fields_mapping` dictionary.
         """
-        obj_type = type(obj)
-        if obj_type not in self._mappings:
-            raise MappingError(f"Missing mapping type for input type {obj_type}")
-        obj_type_prefix = f"{obj_type.__name__}."
+        source_obj = obj
+        source_obj_type = type(source_obj)
+        if (
+            source_obj_type not in self._mappings
+        ):  # TODO: extract in some sort of verify function
+            raise MappingError(
+                f"Missing mapping type for input type {source_obj_type}\n"
+                + "Register mapping using `mapper.add(...)`\n"
+                + "or specify target class using `mapper.to(TargetClass).map(obj)` syntax."
+            )
 
-        target_cls, target_cls_field_mappings = self._mappings[obj_type]
+        target_cls, predefined_field_map = self._mappings[source_obj_type]
 
-        common_fields_mapping = fields_mapping
-        if target_cls_field_mappings:
+        # TODO: combine and produce 1 field_map
+        new_field_map = conf
+        if predefined_field_map:
             # transform mapping if it's from source class field
-            common_fields_mapping = {
-                target_obj_field: (
-                    getattr(obj, source_field[len(obj_type_prefix) :])
-                    if isinstance(source_field, str)
-                    and source_field.startswith(obj_type_prefix)
-                    else source_field
-                )
-                for target_obj_field, source_field in target_cls_field_mappings.items()
+            obj_type_prefix = f"{source_obj_type.__name__}."
+            new_field_map = {
+                target_field: transform_source_field(source_field)
+                # (
+                #     getattr(source_obj, source_field[len(obj_type_prefix) :])
+                #     if isinstance(source_field, str) and source_field.startswith(obj_type_prefix)
+                #     else source_field
+                # )
+                for target_field, source_field in predefined_field_map.items()
             }
             if fields_mapping:
                 common_fields_mapping = {
@@ -222,7 +241,7 @@ class Mapper:
                 }  # merge two dict into one, fields_mapping has priority
 
         return self._map_common(
-            obj,
+            source_obj,
             target_cls,
             set(),
             skip_none_values=skip_none_values,
@@ -244,6 +263,63 @@ class Mapper:
         raise MappingError(
             f"No spec function is added for base class of {target_cls_name!r}"
         )
+
+    def _map_common(
+        self,
+        source_obj: S,
+        target_cls: Type[T],
+        _visited_stack: Set[int],
+        skip_none_values: bool = False,
+        custom_mapping: FieldsMap = None,
+        use_deepcopy: bool = True,
+    ) -> T:
+        """Produces output object mapped from source object and custom arguments.
+
+        Args:
+            obj (S): Source object to map to `target class`.
+            target_cls (Type[T]): Target class to map to.
+            _visited_stack (Set[int]): Visited child objects. To avoid infinite recursive calls.
+            skip_none_values (bool, optional): Skip None values when creating `target class` obj. Defaults to False.
+            custom_mapping (FieldsMap, optional): Custom mapping.
+                Specify dictionary in format {"field_name": value_object}. Defaults to None.
+            use_deepcopy (bool, optional): Apply deepcopy to all child objects when copy from source to target object.
+                Defaults to True.
+
+        Raises:
+            CircularReferenceError: Circular references in `source class` object are not allowed yet.
+
+        Returns:
+            T: Instance of `target class` with mapped fields.
+        """
+        source_obj_id = id(source_obj)
+
+        if source_obj_id in _visited_stack:
+            raise CircularReferenceError()
+        _visited_stack.add(source_obj_id)
+
+        target_cls_fields = self._get_fields(target_cls)
+
+        mapped_values: Dict[str, Any] = {}
+        for field_name in target_cls_fields:
+            value_found, value = _try_get_field_value(
+                field_name, source_obj, custom_mapping
+            )
+            if not value_found:
+                continue
+
+            if value is not None:
+                if use_deepcopy:
+                    mapped_values[field_name] = self._map_subobject(
+                        value, _visited_stack, skip_none_values
+                    )
+                else:  # if use_deepcopy is False, simply assign value to target obj.
+                    mapped_values[field_name] = value
+            elif not skip_none_values:
+                mapped_values[field_name] = None
+
+        _visited_stack.remove(source_obj_id)
+
+        return cast(target_cls, target_cls(**mapped_values))  # type: ignore [valid-type]
 
     def _map_subobject(
         self, obj: S, _visited_stack: Set[int], skip_none_values: bool = False
@@ -288,69 +364,3 @@ class Mapper:
             _visited_stack.remove(obj_id)
 
         return result
-
-    def _map_common(
-        self,
-        obj: S,
-        target_cls: Type[T],
-        _visited_stack: Set[int],
-        skip_none_values: bool = False,
-        custom_mapping: FieldsMap = None,
-        use_deepcopy: bool = True,
-    ) -> T:
-        """Produces output object mapped from source object and custom arguments.
-
-        Args:
-            obj (S): Source object to map to `target class`.
-            target_cls (Type[T]): Target class to map to.
-            _visited_stack (Set[int]): Visited child objects. To avoid infinite recursive calls.
-            skip_none_values (bool, optional): Skip None values when creating `target class` obj. Defaults to False.
-            custom_mapping (FieldsMap, optional): Custom mapping.
-                Specify dictionary in format {"field_name": value_object}. Defaults to None.
-            use_deepcopy (bool, optional): Apply deepcopy to all child objects when copy from source to target object.
-                Defaults to True.
-
-        Raises:
-            CircularReferenceError: Circular references in `source class` object are not allowed yet.
-
-        Returns:
-            T: Instance of `target class` with mapped fields.
-        """
-        obj_id = id(obj)
-
-        if obj_id in _visited_stack:
-            raise CircularReferenceError()
-        _visited_stack.add(obj_id)
-
-        target_cls_fields = self._get_fields(target_cls)
-
-        mapped_values: Dict[str, Any] = {}
-        for field_name in target_cls_fields:
-            value_found, value = _try_get_field_value(field_name, obj, custom_mapping)
-            if not value_found:
-                continue
-
-            if value is not None:
-                if use_deepcopy:
-                    mapped_values[field_name] = self._map_subobject(
-                        value, _visited_stack, skip_none_values
-                    )
-                else:  # if use_deepcopy is False, simply assign value to target obj.
-                    mapped_values[field_name] = value
-            elif not skip_none_values:
-                mapped_values[field_name] = None
-
-        _visited_stack.remove(obj_id)
-
-        return cast(target_cls, target_cls(**mapped_values))  # type: ignore [valid-type]
-
-    def to(self, target_cls: Type[T]) -> MappingWrapper[T]:
-        """Specify `target class` to which map `source class` object.
-
-        Args:
-            target_cls (Type[T]): Target class.
-
-        Returns:
-            MappingWrapper[T]: Mapping wrapper. Use `map` method to perform mapping now.
-        """
-        return MappingWrapper[T](self, target_cls)
