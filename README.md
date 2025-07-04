@@ -149,7 +149,7 @@ class Address:
     number: int
     zip_code: int
     city: str
-  
+
 class PersonInfo:
     def __init__(self, name: str, age: int, address: Address):
         self.name = name
@@ -180,6 +180,43 @@ print("Target public_info.address is same as source address: ", address is publi
 * [FastAPI](https://github.com/tiangolo/fastapi) and [Pydantic](https://github.com/samuelcolvin/pydantic)
 * [TortoiseORM](https://github.com/tortoise/tortoise-orm)
 * [SQLAlchemy](https://www.sqlalchemy.org/)
+
+## Complex mapping support
+
+Support to pass a model factory method or cunstructor when registering a mapping.
+This allows for mapping to value objects or other complex types.
+
+```python
+class SourceEnum(Enum):
+    VALUE1 = "value1"
+    VALUE2 = "value2"
+    VALUE3 = "value3"
+
+class NameEnum(Enum):
+    VALUE1 = 1
+    VALUE2 = 2
+    VALUE3 = 3
+
+class ValueEnum(Enum):
+    A = "value1"
+    B = "value2"
+    C = "value3"
+
+
+class ValueObject:
+    value: str
+
+    def __init__(self, value: Union[float, int, Decimal]):
+        self.value = str(value)
+
+mapper.add(SourceEnum, NameEnum, model_factory=lambda x: NameEnum[x.name])
+mapper.map(SourceEnum.VALUE1) # NameEnum.VALUE1
+
+mapper.add(ValueEnum, SourceEnum, model_factory=lambda x: SourceEnum(x.value))
+mapper.map(ValueEnum.B) #  SourceEnum.VALUE2
+
+mapper.to(ValueObject).map(Decimal("42"), model_factory=ValueObject) # ValueObject(42)
+```
 
 ## Pydantic/FastAPI Support
 Out of the box Pydantic models support:
@@ -273,7 +310,7 @@ class PublicUserInfo(Base):
     id = Column(Integer, primary_key=True)
     public_name = Column(String)
     hobbies = Column(String)
-    
+
 obj = UserInfo(
             id=2,
             full_name="Danny DeVito",
@@ -304,7 +341,7 @@ class TargetClass:
     def __init__(self, **kwargs):
         self.name = kwargs["name"]
         self.age = kwargs["age"]
-    
+
     @staticmethod
     def get_fields(cls):
         return ["name", "age"]
@@ -358,7 +395,7 @@ T = TypeVar("T")
 
 def class_has_fields_property(target_cls: Type[T]) -> bool:
     return callable(getattr(target_cls, "fields", None))
-    
+
 mapper.add_spec(class_has_fields_property, lambda t: getattr(t, "fields")())
 
 target_obj = mapper.to(TargetClass).map(source_obj)
