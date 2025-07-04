@@ -28,13 +28,15 @@ S = TypeVar("S")
 T = TypeVar("T")
 ClassifierFunction = Callable[[Type[T]], bool]
 SpecFunction = Callable[[Type[T]], Iterable[str]]
-FieldsMap = Optional[Dict[str, Any]]
+FieldsMap = Optional[Dict[str, Union[Callable[[S], Any], Any]]]
 
 
 def _try_get_field_value(
     field_name: str, original_obj: Any, custom_mapping: FieldsMap
 ) -> Tuple[bool, Any]:
-    if field_name in (custom_mapping or {}):
+    if field_name in (custom_mapping or {}): # type: ignore [index]
+        if callable(custom_mapping[field_name]): # type: ignore [index]
+            return True, custom_mapping[field_name](original_obj)  # type: ignore [index]
         return True, custom_mapping[field_name]  # type: ignore [index]
     if hasattr(original_obj, field_name):
         return True, getattr(original_obj, field_name)
@@ -184,7 +186,8 @@ class Mapper:
             obj (object): Source object to map to `target class`.
             skip_none_values (bool, optional): Skip None values when creating `target class` obj. Defaults to False.
             fields_mapping (FieldsMap, optional): Custom mapping.
-                Specify dictionary in format {"field_name": value_object}. Defaults to None.
+                Specify dictionary in format {"field_name": value_object | lambda soure_obj}. Can take a lamdba
+                funtion as argument, that will get the source_cls as argument. Defaults to None.
             use_deepcopy (bool, optional): Apply deepcopy to all child objects when copy from source to target object.
                 Defaults to True.
 
