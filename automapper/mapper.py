@@ -62,6 +62,7 @@ class MappingWrapper(Generic[T]):
         skip_none_values: bool = False,
         fields_mapping: FieldsMap = None,
         use_deepcopy: bool = True,
+        model_factory: Optional[Callable[[S], T]] = None,
     ) -> T:
         """Produces output object mapped from source object and custom arguments.
 
@@ -72,6 +73,9 @@ class MappingWrapper(Generic[T]):
                 Specify dictionary in format {"field_name": value_object}. Defaults to None.
             use_deepcopy (bool, optional): Apply deepcopy to all child objects when copy from source to target object.
                 Defaults to True.
+            model_factory (Callable, optional): Custom factory funtion
+                factory function that is used to create the target_obj. Called with the
+                source as parameter. Mutually exclusive with fields_mapping. Defaults to None
 
         Raises:
             CircularReferenceError: Circular references in `source class` object are not allowed yet.
@@ -86,13 +90,14 @@ class MappingWrapper(Generic[T]):
             skip_none_values=skip_none_values,
             custom_mapping=fields_mapping,
             use_deepcopy=use_deepcopy,
+            model_factory=model_factory,
         )
 
 
 class Mapper:
     def __init__(self) -> None:
         """Initializes internal containers"""
-        self._mappings: Dict[Type[S], Tuple[T, FieldsMap]] = {}  # type: ignore [valid-type]
+        self._mappings: Dict[Type[S], Tuple[T, FieldsMap, Callable[[S], [T]]]] = {}  # type: ignore [valid-type]
         self._class_specs: Dict[Type[T], SpecFunction[T]] = {}  # type: ignore [valid-type]
         self._classifier_specs: Dict[  # type: ignore [valid-type]
             ClassifierFunction[T], SpecFunction[T]
@@ -147,6 +152,7 @@ class Mapper:
         target_cls: Type[T],
         override: bool = False,
         fields_mapping: FieldsMap = None,
+        model_factory: Optional[Callable[[S], T]] = None,
     ) -> None:
         """Adds mapping between object of `source class` to an object of `target class`.
 
@@ -156,7 +162,12 @@ class Mapper:
             override (bool, optional): Override existing `source class` mapping to use new `target class`.
                 Defaults to False.
             fields_mapping (FieldsMap, optional): Custom mapping.
-                Specify dictionary in format {"field_name": value_object}. Defaults to None.
+                Specify dictionary in format {"field_name": value_objecture_obj}.
+                Can take a lamdba funtion as argument, that will get the source_cls
+                as argument. Defaults to None.
+            model_factory (Callable, optional): Custom factory funtion
+                factory function that is used to create the target_obj. Called with the
+                source as parameter. Mutually exclusive with fields_mapping. Defaults to None
 
         Raises:
             DuplicatedRegistrationError: Same mapping for `source class` was added.
@@ -168,7 +179,7 @@ class Mapper:
             raise DuplicatedRegistrationError(
                 f"source_cls {source_cls} was already added for mapping"
             )
-        self._mappings[source_cls] = (target_cls, fields_mapping)
+        self._mappings[source_cls] = (target_cls, fields_mapping, model_factory)
 
     def map(
         self,
@@ -201,7 +212,7 @@ class Mapper:
             raise MappingError(f"Missing mapping type for input type {obj_type}")
         obj_type_prefix = f"{obj_type.__name__}."
 
-        target_cls, target_cls_field_mappings = self._mappings[obj_type]
+        target_cls, target_cls_field_mappings, target_cls_model_factory= self._mappings[obj_type]
 
         common_fields_mapping = fields_mapping
         if target_cls_field_mappings:
@@ -221,6 +232,8 @@ class Mapper:
                     **fields_mapping,
                 }  # merge two dict into one, fields_mapping has priority
 
+
+
         return self._map_common(
             obj,
             target_cls,
@@ -228,6 +241,7 @@ class Mapper:
             skip_none_values=skip_none_values,
             custom_mapping=common_fields_mapping,
             use_deepcopy=use_deepcopy,
+            model_factory=target_cls_model_factory,
         )
 
     def _get_fields(self, target_cls: Type[T]) -> Iterable[str]:
@@ -257,7 +271,7 @@ class Mapper:
             raise CircularReferenceError()
 
         if type(obj) in self._mappings:
-            target_cls, _ = self._mappings[type(obj)]
+            target_cls, _, _ = self._mappings[type(obj)]
             result: Any = self._map_common(
                 obj, target_cls, _visited_stack, skip_none_values=skip_none_values
             )
@@ -297,6 +311,7 @@ class Mapper:
         skip_none_values: bool = False,
         custom_mapping: FieldsMap = None,
         use_deepcopy: bool = True,
+        model_factory: Optional[Callable[[S], T]] = None,
     ) -> T:
         """Produces output object mapped from source object and custom arguments.
 
@@ -309,6 +324,9 @@ class Mapper:
                 Specify dictionary in format {"field_name": value_object}. Defaults to None.
             use_deepcopy (bool, optional): Apply deepcopy to all child objects when copy from source to target object.
                 Defaults to True.
+            model_factory (Callable, optional): Custom factory funtion
+                factory function that is used to create the target_obj. Called with the
+                source as parameter. Mutually exclusive with fields_mapping. Defaults to None
 
         Raises:
             CircularReferenceError: Circular references in `source class` object are not allowed yet.
@@ -320,9 +338,24 @@ class Mapper:
 
         if obj_id in _visited_stack:
             raise CircularReferenceError()
+
+        target_cls_fields_mapping = None
+        if type(obj) in self._mappings:
+            _, target_cls_fields_mapping, a = self._mappings[type(obj)]
+
+        if model_factory is not None and target_cls_fields_mapping:
+            raise ValueError(
+                "Cannot specify both model_factory and fields_mapping. "
+                "Use one of them to customize mapping."
+            )
+
+        if model_factory is not None and callable(model_factory):
+            return model_factory(obj)
+
         _visited_stack.add(obj_id)
 
         target_cls_fields = self._get_fields(target_cls)
+
 
         mapped_values: Dict[str, Any] = {}
         for field_name in target_cls_fields:
