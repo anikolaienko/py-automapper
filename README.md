@@ -149,7 +149,7 @@ class Address:
     number: int
     zip_code: int
     city: str
-  
+
 class PersonInfo:
     def __init__(self, name: str, age: int, address: Address):
         self.name = name
@@ -180,6 +180,42 @@ print("Target public_info.address is same as source address: ", address is publi
 * [FastAPI](https://github.com/tiangolo/fastapi) and [Pydantic](https://github.com/samuelcolvin/pydantic)
 * [TortoiseORM](https://github.com/tortoise/tortoise-orm)
 * [SQLAlchemy](https://www.sqlalchemy.org/)
+
+## Complexer mapping registration
+
+Support for defining mappings using `lambda`s.
+
+```python
+class AgeGroup(Enum):
+  CHILD = "child"
+  TEENAGER = "teenager"
+  ADULT = "adult"
+  SENIOR = "senior"
+
+class UserInfo:
+    def __init__(self, name: str, profession: str, age: int):
+        self.name = name
+        self.profession = profession
+        self.age = age
+
+class PublicUserInfo:
+    def __init__(self, name: str, profession: str, age_group: AgeGroup):
+        self.name = name
+        self.profession = profession
+        self.age_group
+
+mapper.add(UserInfo, PublicUserInfo, fields_mapping={)
+    "age_group": lambda user: (
+        AgeGroup.CHILD if user.age < 13 else
+        AgeGroup.TEENAGER if user.age < 20 else
+        AgeGroup.ADULT if user.age < 65 else
+        AgeGroup.SENIOR
+    )
+})
+
+mapper.map(UserInfo("John Malkovich", "engineer", 35))
+# {'name': 'John Malkovich', 'profession': 'engineer', 'age_group': <AgeGroup.ADULT: 'adult'>}
+```
 
 ## Pydantic/FastAPI Support
 Out of the box Pydantic models support:
@@ -273,7 +309,7 @@ class PublicUserInfo(Base):
     id = Column(Integer, primary_key=True)
     public_name = Column(String)
     hobbies = Column(String)
-    
+
 obj = UserInfo(
             id=2,
             full_name="Danny DeVito",
@@ -304,7 +340,7 @@ class TargetClass:
     def __init__(self, **kwargs):
         self.name = kwargs["name"]
         self.age = kwargs["age"]
-    
+
     @staticmethod
     def get_fields(cls):
         return ["name", "age"]
@@ -358,7 +394,7 @@ T = TypeVar("T")
 
 def class_has_fields_property(target_cls: Type[T]) -> bool:
     return callable(getattr(target_cls, "fields", None))
-    
+
 mapper.add_spec(class_has_fields_property, lambda t: getattr(t, "fields")())
 
 target_obj = mapper.to(TargetClass).map(source_obj)

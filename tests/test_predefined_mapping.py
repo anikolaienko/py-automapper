@@ -30,6 +30,9 @@ class AnotherClass:
         self.text = text
         self.num = num
 
+class ComplexClass:
+    def __init__(self, text: Optional[str], num: int) -> None:
+        self.data = AnotherClass(text, num)
 
 class ClassWithoutInitAttrDef:
     def __init__(self, **kwargs: Any) -> None:
@@ -138,3 +141,15 @@ class AutomapperTest(TestCase):
         assert "num" in obj.data
         assert obj.data.get("text") is None
         assert obj.data.get("num") == 11
+
+    def test_add__lambda_resolver_works_with_lambda_function(self):
+        self.mapper.add(ComplexClass, AnotherClass, fields_mapping={
+            "text": lambda x: x.data.text.upper(),
+            "num": lambda x: x.data.num * 2
+        })
+        result: AnotherClass = self.mapper.map(ComplexClass("test_message", 10))
+
+        assert isinstance(result, AnotherClass)
+        assert result.text == "TEST_MESSAGE"
+        assert result.num == 20
+
